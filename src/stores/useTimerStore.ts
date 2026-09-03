@@ -39,6 +39,7 @@ interface TimerState {
     startTimer: () => void;
     stopTimer: () => void;
     tick: () => void;
+    addCustomEntry: (entry: TimeEntry) => void;
 }
 
 export const useTimerStore = create<TimerState>((set, get) => ({
@@ -98,4 +99,9 @@ export const useTimerStore = create<TimerState>((set, get) => ({
         const diff = Math.floor((Date.now() - startTime.getTime()) / 1000);
         set({ elapsedSeconds: diff });
     },
+
+    addCustomEntry: (entry) =>
+        set((state) => ({
+            entries: [entry, ...state.entries],
+        })),
 }));

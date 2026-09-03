@@ -4,13 +4,14 @@ import { Sidebar, type PageRoute } from "@/components/common/Sidebar";
 import { TrackerBar } from "@/components/tracker/TrackerBar";
 import { ActivityPage } from "@/components/activity/ActivityPage";
 import { ProjectsPage } from "@/components/projects/ProjectsPage";
+import { AutoTrackerPage } from "@/components/autotracker/AutoTrackerPage";
 import { useTimerStore } from "@/stores/useTimerStore";
 import { format } from "date-fns";
 import { MapPin } from "lucide-react";
 
 export default function App() {
-    // Default to "projects" as the active feature
-    const [activeRoute, setActiveRoute] = useState<PageRoute>("projects");
+    // Default to "auto-tracker" as requested
+    const [activeRoute, setActiveRoute] = useState<PageRoute>("auto-tracker");
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
     const { entries } = useTimerStore();
@@ -55,7 +56,10 @@ export default function App() {
 
                 {/* Main View Area */}
                 <main className="flex-1 flex flex-col overflow-hidden min-w-0 bg-[#f5f6f8]">
-                    {activeRoute === "projects" ? (
+                    {activeRoute === "auto-tracker" ? (
+                        /* Auto Tracker feature: AI autonomous background activity tracking */
+                        <AutoTrackerPage />
+                    ) : activeRoute === "projects" ? (
                         /* Projects feature: Project directory, budgets, and creation modal */
                         <ProjectsPage />
                     ) : activeRoute === "activity" ? (

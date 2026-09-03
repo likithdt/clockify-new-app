@@ -13,9 +13,10 @@ import {
     Users,
     ChevronRight,
     ChevronLeft,
+    Bot,
 } from "lucide-react";
 
-export type PageRoute = "time-tracker" | "activity" | "calendar" | "schedule" | "expenses" | "time-off" | "dashboard" | "reports" | "kiosks" | "approvals" | "projects" | "team";
+export type PageRoute = "time-tracker" | "auto-tracker" | "activity" | "calendar" | "schedule" | "expenses" | "time-off" | "dashboard" | "reports" | "kiosks" | "approvals" | "projects" | "team";
 
 interface SidebarProps {
     activeRoute: PageRoute;
@@ -61,6 +62,25 @@ export function Sidebar({
                             <Clock className={`w-4 h-4 flex-shrink-0 ${activeRoute === "time-tracker" ? "text-[#03a9f4]" : "text-[#64748b]"}`} />
                             {!collapsed && <span className="truncate">TIME TRACKER</span>}
                         </div>
+                    </button>
+                    <button
+                        onClick={() => onRouteChange("auto-tracker")}
+                        className={`w-full flex items-center justify-between px-2.5 py-2 rounded text-xs font-semibold uppercase tracking-wider transition ${
+                            activeRoute === "auto-tracker"
+                                ? "text-[#0288d1] bg-[#e1f5fe] border-l-4 border-[#03a9f4]"
+                                : "text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0f172a]"
+                        }`}
+                        title="Auto Tracker"
+                    >
+                        <div className="flex items-center gap-2.5 truncate">
+                            <Bot className={`w-4 h-4 flex-shrink-0 ${activeRoute === "auto-tracker" ? "text-[#03a9f4]" : "text-[#64748b]"}`} />
+                            {!collapsed && <span className="truncate">AUTO TRACKER</span>}
+                        </div>
+                        {!collapsed && (
+                            <span className="px-1.5 py-0.5 bg-[#e1f5fe] text-[#0288d1] border border-[#b3e5fc] rounded text-[10px] font-bold tracking-wider font-mono">
+                                AI
+                            </span>
+                        )}
                     </button>
 
                     <button

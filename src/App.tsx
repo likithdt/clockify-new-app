@@ -3,13 +3,14 @@ import { TopNavbar } from "@/components/common/TopNavbar";
 import { Sidebar, type PageRoute } from "@/components/common/Sidebar";
 import { TrackerBar } from "@/components/tracker/TrackerBar";
 import { ActivityPage } from "@/components/activity/ActivityPage";
+import { ProjectsPage } from "@/components/projects/ProjectsPage";
 import { useTimerStore } from "@/stores/useTimerStore";
 import { format } from "date-fns";
 import { MapPin } from "lucide-react";
 
 export default function App() {
-    // Default to "activity" so the requested page is immediately visible, but user can easily switch to time-tracker
-    const [activeRoute, setActiveRoute] = useState<PageRoute>("activity");
+    // Default to "projects" as the active feature
+    const [activeRoute, setActiveRoute] = useState<PageRoute>("projects");
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
     const { entries } = useTimerStore();
@@ -54,7 +55,10 @@ export default function App() {
 
                 {/* Main View Area */}
                 <main className="flex-1 flex flex-col overflow-hidden min-w-0 bg-[#f5f6f8]">
-                    {activeRoute === "activity" ? (
+                    {activeRoute === "projects" ? (
+                        /* Projects feature: Project directory, budgets, and creation modal */
+                        <ProjectsPage />
+                    ) : activeRoute === "activity" ? (
                         /* Activity feature: Activity Monitoring, Screenshots, and Locations */
                         <ActivityPage />
                     ) : activeRoute === "time-tracker" ? (

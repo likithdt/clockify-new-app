@@ -1,5 +1,12 @@
 import { create } from "zustand";
 
+export interface LocationData {
+    latitude: number;
+    longitude: number;
+    address?: string;
+    accuracy?: number;
+}
+
 export interface TimeEntry {
     id: string;
     description: string;
@@ -9,6 +16,7 @@ export interface TimeEntry {
     startTime: Date;
     endTime?: Date;
     durationSeconds: number;
+    location?: LocationData;
 }
 
 interface TimerState {
@@ -17,13 +25,17 @@ interface TimerState {
     projectName: string;
     projectColor: string;
     isBillable: boolean;
+    isLocationEnabled: boolean;
     startTime: Date | null;
     elapsedSeconds: number;
+    currentLocation: LocationData | null;
     entries: TimeEntry[];
 
     setDescription: (desc: string) => void;
     setProject: (name: string, color: string) => void;
     toggleBillable: () => void;
+    toggleLocationEnabled: () => void;
+    setCurrentLocation: (location: LocationData | null) => void;
     startTimer: () => void;
     stopTimer: () => void;
     tick: () => void;
@@ -35,13 +47,17 @@ export const useTimerStore = create<TimerState>((set, get) => ({
     projectName: "No Project",
     projectColor: "#94a3b8",
     isBillable: true,
+    isLocationEnabled: false,
     startTime: null,
     elapsedSeconds: 0,
+    currentLocation: null,
     entries: [],
 
     setDescription: (description) => set({ description }),
     setProject: (projectName, projectColor) => set({ projectName, projectColor }),
     toggleBillable: () => set((state) => ({ isBillable: !state.isBillable })),
+    toggleLocationEnabled: () => set((state) => ({ isLocationEnabled: !state.isLocationEnabled })),
+    setCurrentLocation: (currentLocation) => set({ currentLocation }),
 
     startTimer: () =>
         set({
@@ -51,7 +67,7 @@ export const useTimerStore = create<TimerState>((set, get) => ({
         }),
 
     stopTimer: () => {
-        const { isTracking, startTime, description, projectName, projectColor, isBillable, elapsedSeconds, entries } = get();
+        const { isTracking, startTime, description, projectName, projectColor, isBillable, elapsedSeconds, currentLocation, entries } = get();
         if (!isTracking || !startTime) return;
 
         const newEntry: TimeEntry = {
@@ -63,6 +79,7 @@ export const useTimerStore = create<TimerState>((set, get) => ({
             startTime,
             endTime: new Date(),
             durationSeconds: elapsedSeconds,
+            ...(currentLocation ? { location: currentLocation } : {}),
         };
 
         set({
@@ -70,6 +87,7 @@ export const useTimerStore = create<TimerState>((set, get) => ({
             startTime: null,
             elapsedSeconds: 0,
             description: "",
+            currentLocation: null,
             entries: [newEntry, ...entries],
         });
     },

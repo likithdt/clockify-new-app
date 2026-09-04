@@ -12,13 +12,14 @@ import { ActivityPage } from "@/components/activity/ActivityPage";
 import { ProjectsPage } from "@/components/projects/ProjectsPage";
 import { AutoTrackerPage } from "@/components/autotracker/AutoTrackerPage";
 import { SchedulePage } from "@/components/schedule/SchedulePage";
+import { TimesheetPage } from "@/components/timesheet/TimesheetPage";
 import { useTimerStore } from "@/stores/useTimerStore";
 import { format } from "date-fns";
 import { MapPin } from "lucide-react";
 
 export default function App() {
-    // Default to "schedule" matching the Schedule feature request
-    const [activeRoute, setActiveRoute] = useState<PageRoute>("schedule");
+    // Default to "timesheet" matching the Timesheet feature request
+    const [activeRoute, setActiveRoute] = useState<PageRoute>("timesheet");
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
     const { entries } = useTimerStore();
@@ -63,7 +64,10 @@ export default function App() {
 
                 {/* Main View Area */}
                 <main className="flex-1 flex flex-col overflow-hidden min-w-0 bg-[#f5f6f8]">
-                    {activeRoute === "schedule" ? (
+                    {activeRoute === "timesheet" ? (
+                        /* Timesheet feature matching TimeSheet.png */
+                        <TimesheetPage />
+                    ) : activeRoute === "schedule" ? (
                         /* Schedule feature matching Schedule.png */
                         <SchedulePage />
                     ) : activeRoute === "team" || activeRoute === "rates" ? (

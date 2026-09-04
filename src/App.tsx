@@ -2,6 +2,7 @@ import { useState } from "react";
 import { TopNavbar } from "@/components/common/TopNavbar";
 import { Sidebar, type PageRoute } from "@/components/common/Sidebar";
 import { InvoicesPage } from "@/components/invoices/InvoicesPage";
+import { ExpensesPage } from "@/components/expenses/ExpensesPage";
 import { ReportsPage } from "@/components/reports/ReportsPage";
 import { KiosksPage } from "@/components/kiosks/KiosksPage";
 import { TimeTrackerPage } from "@/components/tracker/TimeTrackerPage";
@@ -10,8 +11,8 @@ import { ProjectsPage } from "@/components/projects/ProjectsPage";
 import { AutoTrackerPage } from "@/components/autotracker/AutoTrackerPage";
 
 export default function App() {
-    // Default to "invoices" matching the Invoices feature request
-    const [activeRoute, setActiveRoute] = useState<PageRoute>("invoices");
+    // Default to "expenses" matching the Expenses feature request
+    const [activeRoute, setActiveRoute] = useState<PageRoute>("expenses");
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
     return (
@@ -34,7 +35,10 @@ export default function App() {
 
                 {/* Main View Area */}
                 <main className="flex-1 flex flex-col overflow-hidden min-w-0 bg-[#f5f6f8]">
-                    {activeRoute === "invoices" ? (
+                    {activeRoute === "expenses" ? (
+                        /* Expenses feature matching Expenses.png & Creation of Expenses.png */
+                        <ExpensesPage />
+                    ) : activeRoute === "invoices" ? (
                         /* Invoices feature matching Invoices.png & Creation of Invoice.png */
                         <InvoicesPage />
                     ) : activeRoute === "reports" ? (

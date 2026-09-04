@@ -11,8 +11,6 @@ import {
     Download,
     Trash2,
     Archive,
-    Copy,
-    Edit,
 } from "lucide-react";
 
 export function ProjectsTable() {
@@ -37,6 +35,7 @@ export function ProjectsTable() {
 
     const [isExportOpen, setIsExportOpen] = useState(false);
     const [actionMenuOpenId, setActionMenuOpenId] = useState<string | null>(null);
+    const [hoveredClientProject, setHoveredClientProject] = useState<string | null>(null);
 
     // Filter projects
     const filteredProjects = projects.filter((project) => {
@@ -85,6 +84,7 @@ export function ProjectsTable() {
         return sortDirection === "asc" ? comp : -comp;
     });
 
+    // Format numbers with comma decimal and period thousands (e.g. 3.237,34) matching Projects.png
     const formatNumber = (num: number, decimals = 2) => {
         return num.toLocaleString("de-DE", {
             minimumFractionDigits: decimals,
@@ -103,7 +103,9 @@ export function ProjectsTable() {
             p.progressPercent || "-",
             p.access,
         ]);
-        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+        const csvContent =
+            "data:text/csv;charset=utf-8," +
+            [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
@@ -115,7 +117,7 @@ export function ProjectsTable() {
 
     return (
         <div className="w-full bg-white border border-[#e2e8f0] rounded-sm shadow-xs select-none">
-            {/* Top Toolbar Bar (Projects / Export) */}
+            {/* Top Toolbar Bar (Projects / Export) matching Projects.png */}
             <div className="bg-[#ebf1f5] px-4 py-2 flex items-center justify-between border-b border-[#e2e8f0]">
                 <span className="text-xs text-[#64748b] font-medium">Projects</span>
 
@@ -150,8 +152,8 @@ export function ProjectsTable() {
                 </div>
             </div>
 
-            {/* Table Header */}
-            <div className="grid grid-cols-[38px_2.4fr_1.6fr_1.4fr_1.4fr_1.4fr_1fr_70px] bg-[#f8fafc] border-b border-[#e2e8f0] px-4 py-2.5 text-[11px] font-bold text-[#64748b] uppercase tracking-wider items-center">
+            {/* Table Header matching Projects.png */}
+            <div className="grid grid-cols-[38px_2.2fr_1.8fr_1.4fr_1.4fr_1.4fr_1fr_60px] bg-[#f8fafc] border-b border-[#e2e8f0] px-4 py-2.5 text-[11px] font-bold text-[#64748b] uppercase tracking-wider items-center">
                 <div className="flex items-center">
                     <input
                         type="checkbox"
@@ -209,7 +211,7 @@ export function ProjectsTable() {
                 <div className="text-right"></div>
             </div>
 
-            {/* Table Rows */}
+            {/* Table Rows matching Projects.png */}
             <div className="divide-y divide-[#f1f5f9]">
                 {sortedProjects.length === 0 ? (
                     <div className="py-12 text-center text-xs text-[#94a3b8]">
@@ -219,11 +221,18 @@ export function ProjectsTable() {
                     sortedProjects.map((project) => {
                         const isSelected = selectedProjectIds.includes(project.id);
                         const isActionOpen = actionMenuOpenId === project.id;
+                        const isClientHovered = hoveredClientProject === project.id;
+
+                        // Display name matching Projects.png (e.g. [SAMPLE] Internal..., [SAMPLE] Project ...)
+                        const displayName =
+                            project.name.length > 20
+                                ? project.name.slice(0, 18) + "..."
+                                : project.name;
 
                         return (
                             <div
                                 key={project.id}
-                                className={`grid grid-cols-[38px_2.4fr_1.6fr_1.4fr_1.4fr_1.4fr_1fr_70px] px-4 py-3 text-xs items-center transition hover:bg-[#fbfcfd] ${
+                                className={`grid grid-cols-[38px_2.2fr_1.8fr_1.4fr_1.4fr_1.4fr_1fr_60px] px-4 py-3 text-xs items-center transition hover:bg-[#fbfcfd] ${
                                     isSelected ? "bg-[#f0f9ff]" : "bg-white"
                                 }`}
                             >
@@ -237,7 +246,7 @@ export function ProjectsTable() {
                                     />
                                 </div>
 
-                                {/* Name with color dot */}
+                                {/* Name with color dot matching Projects.png */}
                                 <div className="flex items-center gap-2.5 truncate pr-2">
                                     <span
                                         className="w-2 h-2 rounded-full flex-shrink-0"
@@ -247,32 +256,44 @@ export function ProjectsTable() {
                                         className="font-normal text-[#1e293b] hover:text-[#03a9f4] cursor-pointer truncate"
                                         title={project.name}
                                     >
-                                        {project.name}
+                                        {displayName}
                                     </span>
                                 </div>
 
-                                {/* Client */}
-                                <div className="text-[#1e293b] truncate pr-2">
+                                {/* Client column with hover tooltip matching Projects.png */}
+                                <div
+                                    className="text-[#1e293b] truncate pr-2 relative"
+                                    onMouseEnter={() => setHoveredClientProject(project.id)}
+                                    onMouseLeave={() => setHoveredClientProject(null)}
+                                >
                                     {project.client ? (
-                                        <span
-                                            className="cursor-pointer hover:underline"
-                                            title={project.client}
-                                        >
-                                            {project.client}
-                                        </span>
+                                        <>
+                                            <span
+                                                className="cursor-pointer hover:underline"
+                                                title={project.client}
+                                            >
+                                                {project.client}
+                                            </span>
+                                            {/* Black tooltip matching Projects.png row 3 */}
+                                            {isClientHovered && (
+                                                <div className="absolute -top-7 left-0 bg-[#1e293b] text-white text-[11px] px-2 py-0.5 rounded shadow z-40 pointer-events-none whitespace-nowrap">
+                                                    {project.client}
+                                                </div>
+                                            )}
+                                        </>
                                     ) : (
                                         <span className="text-[#94a3b8]">--</span>
                                     )}
                                 </div>
 
-                                {/* Tracked */}
+                                {/* Tracked column matching Projects.png */}
                                 <div className="flex flex-col">
                                     <div className="flex items-center gap-1">
                                         <span className="text-[#1e293b]">
                                             {formatNumber(project.trackedHours)}h
                                         </span>
                                         {project.isRecurring && (
-                                            <RotateCw className="w-3 h-3 text-[#64748b] ml-0.5" />
+                                            <RotateCw className="w-3.5 h-3.5 text-[#64748b] ml-0.5" />
                                         )}
                                     </div>
                                     {project.budgetHours && (
@@ -282,7 +303,7 @@ export function ProjectsTable() {
                                     )}
                                 </div>
 
-                                {/* Amount */}
+                                {/* Amount column matching Projects.png */}
                                 <div className="flex flex-col">
                                     <span
                                         className={`font-normal ${
@@ -291,17 +312,16 @@ export function ProjectsTable() {
                                                 : "text-[#1e293b]"
                                         }`}
                                     >
-                                        {formatNumber(project.amount)}{" "}
-                                        {project.currency}
+                                        {formatNumber(project.amount)} {project.currency}
                                     </span>
-                                    {project.isBudgetExceeded && project.budgetHours && (
+                                    {project.budgetAmount && (
                                         <span className="text-[11px] text-[#94a3b8]">
-                                            of {formatNumber(project.budgetHours)},00 USD
+                                            of {formatNumber(project.budgetAmount)} USD
                                         </span>
                                     )}
                                 </div>
 
-                                {/* Progress */}
+                                {/* Progress column matching Projects.png */}
                                 <div>
                                     {project.progressPercent !== undefined ? (
                                         <div className="flex flex-col gap-1 w-24">
@@ -341,12 +361,12 @@ export function ProjectsTable() {
                                     )}
                                 </div>
 
-                                {/* Access */}
+                                {/* Access column */}
                                 <div className="text-xs text-[#1e293b]">
                                     {project.access}
                                 </div>
 
-                                {/* Actions (Star & Three dots) */}
+                                {/* Actions (Star & Three dots) matching Projects.png */}
                                 <div className="flex items-center justify-end gap-2 relative">
                                     <button
                                         type="button"
@@ -363,68 +383,54 @@ export function ProjectsTable() {
                                         />
                                     </button>
 
-                                    <div className="relative">
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                setActionMenuOpenId(
-                                                    isActionOpen ? null : project.id
-                                                )
-                                            }
-                                            className="p-1 text-[#94a3b8] hover:text-[#1e293b] cursor-pointer transition"
-                                            title="More options"
-                                        >
-                                            <MoreVertical className="w-4 h-4" />
-                                        </button>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setActionMenuOpenId(isActionOpen ? null : project.id)
+                                        }
+                                        className="p-1 text-[#94a3b8] hover:text-[#1e293b] rounded-sm transition cursor-pointer"
+                                    >
+                                        <MoreVertical className="w-4 h-4" />
+                                    </button>
 
-                                        {isActionOpen && (
-                                            <div className="absolute right-0 top-full mt-1 bg-white border border-[#e2e8f0] rounded-sm shadow-xl z-40 py-1 min-w-[130px] text-xs">
+                                    {/* Action Dropdown Menu */}
+                                    {isActionOpen && (
+                                        <div className="absolute right-0 top-full mt-1 bg-white border border-[#e2e8f0] rounded-sm shadow-xl z-30 py-1 min-w-[120px] text-xs">
+                                            {project.isArchived ? (
                                                 <button
                                                     onClick={() => {
-                                                        setActionMenuOpenId(null);
-                                                    }}
-                                                    className="w-full text-left px-3 py-1.5 hover:bg-[#f1f5f9] text-[#1e293b] flex items-center gap-2 cursor-pointer"
-                                                >
-                                                    <Edit className="w-3.5 h-3.5 text-[#64748b]" />
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        setActionMenuOpenId(null);
-                                                    }}
-                                                    className="w-full text-left px-3 py-1.5 hover:bg-[#f1f5f9] text-[#1e293b] flex items-center gap-2 cursor-pointer"
-                                                >
-                                                    <Copy className="w-3.5 h-3.5 text-[#64748b]" />
-                                                    Duplicate
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        if (project.isArchived) {
-                                                            restoreProject(project.id);
-                                                        } else {
-                                                            archiveProject(project.id);
-                                                        }
+                                                        restoreProject(project.id);
                                                         setActionMenuOpenId(null);
                                                     }}
                                                     className="w-full text-left px-3 py-1.5 hover:bg-[#f1f5f9] text-[#1e293b] flex items-center gap-2 cursor-pointer"
                                                 >
                                                     <Archive className="w-3.5 h-3.5 text-[#64748b]" />
-                                                    {project.isArchived ? "Restore" : "Archive"}
+                                                    Restore
                                                 </button>
-                                                <div className="h-px bg-[#f1f5f9] my-1" />
+                                            ) : (
                                                 <button
                                                     onClick={() => {
-                                                        deleteProject(project.id);
+                                                        archiveProject(project.id);
                                                         setActionMenuOpenId(null);
                                                     }}
-                                                    className="w-full text-left px-3 py-1.5 hover:bg-[#fee2e2] text-[#ef4444] flex items-center gap-2 cursor-pointer"
+                                                    className="w-full text-left px-3 py-1.5 hover:bg-[#f1f5f9] text-[#1e293b] flex items-center gap-2 cursor-pointer"
                                                 >
-                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                    Delete
+                                                    <Archive className="w-3.5 h-3.5 text-[#64748b]" />
+                                                    Archive
                                                 </button>
-                                            </div>
-                                        )}
-                                    </div>
+                                            )}
+                                            <button
+                                                onClick={() => {
+                                                    deleteProject(project.id);
+                                                    setActionMenuOpenId(null);
+                                                }}
+                                                className="w-full text-left px-3 py-1.5 hover:bg-[#fee2e2] text-[#ef4444] flex items-center gap-2 cursor-pointer"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                                Delete
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         );

@@ -17,7 +17,7 @@ import {
     FileText,
 } from "lucide-react";
 
-export type PageRoute = "time-tracker" | "auto-tracker" | "activity" | "calendar" | "schedule" | "expenses" | "time-off" | "dashboard" | "reports" | "kiosks" | "approvals" | "projects" | "team" | "invoices";
+export type PageRoute = "time-tracker" | "auto-tracker" | "activity" | "calendar" | "schedule" | "expenses" | "time-off" | "dashboard" | "reports" | "kiosks" | "approvals" | "projects" | "team" | "rates" | "invoices";
 
 interface SidebarProps {
     activeRoute: PageRoute;

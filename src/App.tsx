@@ -4,6 +4,7 @@ import { Sidebar, type PageRoute } from "@/components/common/Sidebar";
 import { InvoicesPage } from "@/components/invoices/InvoicesPage";
 import { ExpensesPage } from "@/components/expenses/ExpensesPage";
 import { ApprovalsPage } from "@/components/approvals/ApprovalsPage";
+import { TeamPage } from "@/components/team/TeamPage";
 import { ReportsPage } from "@/components/reports/ReportsPage";
 import { KiosksPage } from "@/components/kiosks/KiosksPage";
 import { TimeTrackerPage } from "@/components/tracker/TimeTrackerPage";
@@ -12,8 +13,8 @@ import { ProjectsPage } from "@/components/projects/ProjectsPage";
 import { AutoTrackerPage } from "@/components/autotracker/AutoTrackerPage";
 
 export default function App() {
-    // Default to "approvals" matching the Approvals feature request
-    const [activeRoute, setActiveRoute] = useState<PageRoute>("approvals");
+    // Default to "projects" matching the Projects feature request
+    const [activeRoute, setActiveRoute] = useState<PageRoute>("projects");
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
     return (
@@ -36,7 +37,10 @@ export default function App() {
 
                 {/* Main View Area */}
                 <main className="flex-1 flex flex-col overflow-hidden min-w-0 bg-[#f5f6f8]">
-                    {activeRoute === "approvals" ? (
+                    {activeRoute === "team" || activeRoute === "rates" ? (
+                        /* Rates & Team feature matching Team.png, Team (Billable rate).png, Team(CostRate).png, etc. */
+                        <TeamPage />
+                    ) : activeRoute === "approvals" ? (
                         /* Approvals feature matching Approvals Timesheet.png & Approvals Expenses.png */
                         <ApprovalsPage />
                     ) : activeRoute === "expenses" ? (

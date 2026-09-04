@@ -7,6 +7,7 @@ export interface Project {
     client: string | null;
     trackedHours: number;
     budgetHours?: number;
+    budgetAmount?: number;
     isRecurring?: boolean;
     amount: number;
     currency: string;
@@ -27,6 +28,7 @@ export type SortDirection = "asc" | "desc";
 
 interface ProjectState {
     projects: Project[];
+    hasSampleData: boolean;
     searchQuery: string;
     statusFilter: StatusFilter;
     clientFilter: string;
@@ -36,6 +38,7 @@ interface ProjectState {
     sortDirection: SortDirection;
     selectedProjectIds: string[];
     isCreateModalOpen: boolean;
+    isRemoveSampleModalOpen: boolean;
 
     // Actions
     setSearchQuery: (query: string) => void;
@@ -50,6 +53,9 @@ interface ProjectState {
     toggleFavorite: (id: string) => void;
     openCreateModal: () => void;
     closeCreateModal: () => void;
+    setRemoveSampleModalOpen: (open: boolean) => void;
+    removeSampleData: () => void;
+    restoreSampleData: () => void;
     createProject: (params: {
         name: string;
         color: string;
@@ -62,74 +68,77 @@ interface ProjectState {
     restoreProject: (id: string) => void;
 }
 
+const sampleProjects: Project[] = [
+    {
+        id: "proj-1",
+        name: "[SAMPLE] Internal Work",
+        color: "#03a9f4",
+        client: null,
+        trackedHours: 0,
+        amount: 0,
+        currency: "USD",
+        access: "Public",
+        isFavorite: false,
+        isArchived: false,
+        isBillable: true,
+        createdAt: new Date("2026-01-01"),
+    },
+    {
+        id: "proj-2",
+        name: "[SAMPLE] Project Orion",
+        color: "#f59e0b",
+        client: "[SAMPLE] Client B",
+        trackedHours: 282,
+        budgetHours: 400,
+        amount: 2953.0,
+        currency: "USD",
+        progressPercent: 70.5,
+        access: "Public",
+        isFavorite: false,
+        isArchived: false,
+        isBillable: true,
+        createdAt: new Date("2026-01-10"),
+    },
+    {
+        id: "proj-3",
+        name: "[SAMPLE] Project Apollo",
+        color: "#ef4444",
+        client: "[SAMPLE] Client A",
+        trackedHours: 367,
+        // No hourly budget, but has monetary budget of 400.00 USD
+        amount: 3237.34,
+        budgetAmount: 400.0,
+        currency: "USD",
+        progressPercent: 809.33,
+        isBudgetExceeded: true,
+        access: "Public",
+        isFavorite: false,
+        isArchived: false,
+        isBillable: true,
+        createdAt: new Date("2026-01-15"),
+    },
+    {
+        id: "proj-4",
+        name: "[SAMPLE] Project Phoenix",
+        color: "#78716c",
+        client: "[SAMPLE] Client A",
+        trackedHours: 38,
+        budgetHours: 200,
+        isRecurring: true,
+        amount: 405.0,
+        currency: "USD",
+        progressPercent: 19.0,
+        access: "Public",
+        isFavorite: false,
+        isArchived: false,
+        isBillable: true,
+        createdAt: new Date("2026-02-01"),
+    },
+];
+
 export const useProjectStore = create<ProjectState>((set, get) => ({
-    projects: [
-        {
-            id: "proj-1",
-            name: "[SAMPLE] Internal Work",
-            color: "#03a9f4",
-            client: null,
-            trackedHours: 0,
-            amount: 0,
-            currency: "USD",
-            progressPercent: undefined,
-            access: "Public",
-            isFavorite: false,
-            isArchived: false,
-            isBillable: true,
-            createdAt: new Date("2026-01-01"),
-        },
-        {
-            id: "proj-2",
-            name: "[SAMPLE] Project Orion",
-            color: "#f59e0b",
-            client: "[SAMPLE] Client B",
-            trackedHours: 282,
-            budgetHours: 400,
-            amount: 2953.0,
-            currency: "USD",
-            progressPercent: 70.5,
-            access: "Public",
-            isFavorite: false,
-            isArchived: false,
-            isBillable: true,
-            createdAt: new Date("2026-01-10"),
-        },
-        {
-            id: "proj-3",
-            name: "[SAMPLE] Project Apollo",
-            color: "#ef4444",
-            client: "[SAMPLE] Client A",
-            trackedHours: 367,
-            budgetHours: 400,
-            amount: 3237.34,
-            currency: "USD",
-            progressPercent: 809.33,
-            isBudgetExceeded: true,
-            access: "Public",
-            isFavorite: false,
-            isArchived: false,
-            isBillable: true,
-            createdAt: new Date("2026-01-15"),
-        },
-        {
-            id: "proj-4",
-            name: "[SAMPLE] Project Phoenix",
-            color: "#78716c",
-            client: "[SAMPLE] Client A",
-            trackedHours: 38,
-            budgetHours: 200,
-            isRecurring: true,
-            amount: 405.0,
-            currency: "USD",
-            progressPercent: 19.0,
-            access: "Public",
-            isFavorite: false,
-            isArchived: false,
-            isBillable: true,
-            createdAt: new Date("2026-02-01"),
-        },
-    ],
+    projects: sampleProjects,
+    hasSampleData: true,
     searchQuery: "",
     statusFilter: "Active",
     clientFilter: "All",
@@ -139,6 +148,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     sortDirection: "asc",
     selectedProjectIds: [],
     isCreateModalOpen: false,
+    isRemoveSampleModalOpen: false,
 
     setSearchQuery: (query) => set({ searchQuery: query }),
     setStatusFilter: (statusFilter) => set({ statusFilter }),
@@ -186,12 +196,32 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     openCreateModal: () => set({ isCreateModalOpen: true }),
     closeCreateModal: () => set({ isCreateModalOpen: false }),
 
+    setRemoveSampleModalOpen: (open) => set({ isRemoveSampleModalOpen: open }),
+
+    removeSampleData: () => {
+        set((state) => ({
+            projects: state.projects.filter((p) => !p.name.startsWith("[SAMPLE]")),
+            hasSampleData: false,
+            isRemoveSampleModalOpen: false,
+        }));
+    },
+
+    restoreSampleData: () => {
+        set((state) => {
+            const nonSample = state.projects.filter((p) => !p.name.startsWith("[SAMPLE]"));
+            return {
+                projects: [...sampleProjects, ...nonSample],
+                hasSampleData: true,
+            };
+        });
+    },
+
     createProject: ({ name, color, client, isPublic, isBillable = true }) => {
         const newProject: Project = {
             id: `proj-${Date.now()}`,
             name,
             color,
-            client: client && client !== "Select client" && client !== "No client" ? client : null,
+            client,
             trackedHours: 0,
             amount: 0,
             currency: "USD",

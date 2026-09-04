@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { TopNavbar } from "@/components/common/TopNavbar";
 import { Sidebar, type PageRoute } from "@/components/common/Sidebar";
+import { KiosksPage } from "@/components/kiosks/KiosksPage";
 import { TimeTrackerPage } from "@/components/tracker/TimeTrackerPage";
 import { ActivityPage } from "@/components/activity/ActivityPage";
 import { ProjectsPage } from "@/components/projects/ProjectsPage";
 import { AutoTrackerPage } from "@/components/autotracker/AutoTrackerPage";
 
 export default function App() {
-    // Default to "time-tracker" matching the Timer feature request
-    const [activeRoute, setActiveRoute] = useState<PageRoute>("time-tracker");
+    // Default to "kiosks" matching the Kiosk feature request
+    const [activeRoute, setActiveRoute] = useState<PageRoute>("kiosks");
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
     return (
@@ -31,7 +32,10 @@ export default function App() {
 
                 {/* Main View Area */}
                 <main className="flex-1 flex flex-col overflow-hidden min-w-0 bg-[#f5f6f8]">
-                    {activeRoute === "time-tracker" ? (
+                    {activeRoute === "kiosks" ? (
+                        /* Kiosks feature matching Kiosks.png & Creation of Kiosk.png */
+                        <KiosksPage />
+                    ) : activeRoute === "time-tracker" ? (
                         /* Timer / Time Tracker feature matching TimeTracker.png */
                         <TimeTrackerPage />
                     ) : activeRoute === "auto-tracker" ? (

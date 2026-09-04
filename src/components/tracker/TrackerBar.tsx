@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useTimerStore } from "@/stores/useTimerStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Play, Square, Tag, DollarSign, Folder } from "lucide-react";
+import { Play, Square, Tag, DollarSign } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,

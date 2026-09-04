@@ -4,6 +4,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@backend/*": [
+        "./backend/*"
       ]
     },
     "target": "ES2020",
@@ -29,7 +32,8 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": [
-    "src"
+    "src",
+    "backend"
   ],
   "references": [
     {

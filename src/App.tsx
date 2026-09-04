@@ -3,6 +3,7 @@ import { TopNavbar } from "@/components/common/TopNavbar";
 import { Sidebar, type PageRoute } from "@/components/common/Sidebar";
 import { InvoicesPage } from "@/components/invoices/InvoicesPage";
 import { ExpensesPage } from "@/components/expenses/ExpensesPage";
+import { ApprovalsPage } from "@/components/approvals/ApprovalsPage";
 import { ReportsPage } from "@/components/reports/ReportsPage";
 import { KiosksPage } from "@/components/kiosks/KiosksPage";
 import { TimeTrackerPage } from "@/components/tracker/TimeTrackerPage";
@@ -11,8 +12,8 @@ import { ProjectsPage } from "@/components/projects/ProjectsPage";
 import { AutoTrackerPage } from "@/components/autotracker/AutoTrackerPage";
 
 export default function App() {
-    // Default to "expenses" matching the Expenses feature request
-    const [activeRoute, setActiveRoute] = useState<PageRoute>("expenses");
+    // Default to "approvals" matching the Approvals feature request
+    const [activeRoute, setActiveRoute] = useState<PageRoute>("approvals");
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
     return (
@@ -35,7 +36,10 @@ export default function App() {
 
                 {/* Main View Area */}
                 <main className="flex-1 flex flex-col overflow-hidden min-w-0 bg-[#f5f6f8]">
-                    {activeRoute === "expenses" ? (
+                    {activeRoute === "approvals" ? (
+                        /* Approvals feature matching Approvals Timesheet.png & Approvals Expenses.png */
+                        <ApprovalsPage />
+                    ) : activeRoute === "expenses" ? (
                         /* Expenses feature matching Expenses.png & Creation of Expenses.png */
                         <ExpensesPage />
                     ) : activeRoute === "invoices" ? (

@@ -3,7 +3,20 @@ import { useTimerStore } from "@/stores/useTimerStore";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MapPin, Play, Square } from "lucide-react";
+import { Play, Square, Tag, DollarSign, Folder } from "lucide-react";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const SAMPLE_PROJECTS = [
+    { name: "Frontend Development", color: "#3b82f6" },
+    { name: "API Integration", color: "#10b981" },
+    { name: "Design System", color: "#8b5cf6" },
+    { name: "Internal Admin", color: "#64748b" },
+];
 
 export function TrackerBar() {
     const {

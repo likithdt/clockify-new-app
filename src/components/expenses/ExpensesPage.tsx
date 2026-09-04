@@ -305,7 +305,7 @@ export function ExpensesPage() {
                             <div className="flex items-center gap-2">
                                 <span className="uppercase font-semibold tracking-wider text-[11px]">Total:</span>
                                 <span className="text-sm font-bold text-[#1e293b]">
-                                    {totalAmount.toFixed(2)} USD
+                                    {totalAmount.toFixed(2)} INR
                                 </span>
                             </div>
                         </div>

@@ -15,7 +15,7 @@ export function CreateInvoiceModal() {
         useInvoiceStore();
 
     const [selectedClient, setSelectedClient] = useState("");
-    const [currency, setCurrency] = useState("USD");
+    const [currency, setCurrency] = useState("INR");
     const [invoiceNumber, setInvoiceNumber] = useState(
         `[SAMPLE] Invoice ${invoices.length + 1}`
     );

@@ -634,10 +634,10 @@ export function TeamPage() {
                                 <th className="py-3 px-4">NAME ⬍</th>
                                 <th className="py-3 px-4">EMAIL ⬍</th>
                                 {visibleFields.billableRate && (
-                                    <th className="py-3 px-4">BILLABLE RATE (USD) ⬍</th>
+                                    <th className="py-3 px-4">BILLABLE RATE (INR) ⬍</th>
                                 )}
                                 {visibleFields.costRate && (
-                                    <th className="py-3 px-4">COST RATE (USD) ⬍</th>
+                                    <th className="py-3 px-4">COST RATE (INR) ⬍</th>
                                 )}
                                 {visibleFields.role && <th className="py-3 px-4">ROLE</th>}
                                 {visibleFields.group && <th className="py-3 px-4">GROUP</th>}
@@ -670,13 +670,13 @@ export function TeamPage() {
                                             {member.email}
                                         </td>
 
-                                        {/* Billable Rate Column */}
+                                        {/* Billable Rate Column matching Team.png */}
                                         {visibleFields.billableRate && (
                                             <td className="py-3.5 px-4">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="w-10 text-right font-medium text-[#1e293b]">
+                                                <div className="inline-flex items-stretch border border-[#d1d5db] bg-[#eef2f6] rounded overflow-hidden text-xs">
+                                                    <span className="px-3 py-1 text-center font-normal text-[#1e293b] min-w-[42px]">
                                                         {member.billableRate !== null
-                                                            ? `${member.billableRate.toFixed(0)}`
+                                                            ? `${member.billableRate}`
                                                             : "—"}
                                                     </span>
                                                     <button
@@ -689,7 +689,7 @@ export function TeamPage() {
                                                                 currentRate: member.billableRate,
                                                             })
                                                         }
-                                                        className="px-2 py-0.5 border border-[#d1d5db] hover:border-[#03a9f4] text-[#03a9f4] rounded text-[11px] font-medium transition cursor-pointer"
+                                                        className="px-2.5 py-1 bg-white hover:bg-[#f8fafc] text-[#03a9f4] border-l border-[#d1d5db] font-normal text-xs cursor-pointer transition"
                                                     >
                                                         Change
                                                     </button>
@@ -697,13 +697,13 @@ export function TeamPage() {
                                             </td>
                                         )}
 
-                                        {/* Cost Rate Column */}
+                                        {/* Cost Rate Column matching Team.png */}
                                         {visibleFields.costRate && (
                                             <td className="py-3.5 px-4">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="w-10 text-right font-medium text-[#1e293b]">
+                                                <div className="inline-flex items-stretch border border-[#d1d5db] bg-[#eef2f6] rounded overflow-hidden text-xs">
+                                                    <span className="px-3 py-1 text-center font-normal text-[#1e293b] min-w-[42px]">
                                                         {member.costRate !== null
-                                                            ? `${member.costRate.toFixed(0)}`
+                                                            ? `${member.costRate}`
                                                             : "—"}
                                                     </span>
                                                     <button
@@ -716,7 +716,7 @@ export function TeamPage() {
                                                                 currentRate: member.costRate,
                                                             })
                                                         }
-                                                        className="px-2 py-0.5 border border-[#d1d5db] hover:border-[#03a9f4] text-[#03a9f4] rounded text-[11px] font-medium transition cursor-pointer"
+                                                        className="px-2.5 py-1 bg-white hover:bg-[#f8fafc] text-[#03a9f4] border-l border-[#d1d5db] font-normal text-xs cursor-pointer transition"
                                                     >
                                                         Change
                                                     </button>

@@ -16,7 +16,7 @@ import { format } from "date-fns";
 import { MapPin } from "lucide-react";
 
 export default function App() {
-    // Default to "team" matching the Rates / Team feature
+    // Default to "team" matching the Team feature request
     const [activeRoute, setActiveRoute] = useState<PageRoute>("team");
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 

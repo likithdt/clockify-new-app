@@ -34,6 +34,8 @@ export const TopHeader: React.FC = () => {
             onClick={removeSampleData}
             className="border border-white/80 hover:bg-white hover:text-[#0288d1] transition-all px-2.5 py-0.5 rounded text-[11px] font-semibold tracking-wide uppercase cursor-pointer"
           >
+
+            
             Remove Sample Data
           </button>
         </div>

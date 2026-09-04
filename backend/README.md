@@ -96,8 +96,50 @@ Public or company holidays that exempt team members from working.
 
 ---
 
-## 3. Separation of Concerns
+## 3. Calendar Task Architecture & API Specification
+
+The Calendar Task module provides interactive calendar management mirroring Clockify's Week & Day view. It supports both **tracked time entries** and **planned tasks**, duration calculation, project & client association, billable tracking, teammate filtering, and direct timer integration.
+
+### Domain Entities
+
+#### `CalendarTask`
+| Field | Type | Description |
+|---|---|---|
+| `id` | `string` | Unique task ID (`ct_123`) |
+| `title` | `string` | Task / entry description |
+| `project_id` | `string?` | Optional FK to Project |
+| `project_name` | `string` | Project display name |
+| `project_color` | `string` | Hex color code (e.g. `#03a9f4`) |
+| `client_name` | `string?` | Optional client label |
+| `date` | `string` | ISO date `YYYY-MM-DD` |
+| `start_time` | `string` | `HH:mm` 24-hour start time |
+| `end_time` | `string` | `HH:mm` 24-hour end time |
+| `duration_minutes` | `number` | Computed duration in minutes |
+| `is_billable` | `boolean` | Billable flag |
+| `tags` | `string[]` | Associated labels |
+| `entry_type` | `'entry' \| 'planned'` | Regular logged block vs planned task |
+| `member_id` | `string` | FK to `TeamMember.id` |
+| `status` | `'completed' \| 'in_progress' \| 'planned'` | Execution status |
+
+### Calendar API Endpoints & Tauri Commands
+- `GET /api/calendar/tasks` or `list_calendar_tasks` — Filter tasks by date range, member, project, entry type, billable.
+- `GET /api/calendar/tasks/:id` or `get_calendar_task` — Get single task.
+- `POST /api/calendar/tasks` or `create_calendar_task` — Create calendar entry or planned task.
+- `PUT /api/calendar/tasks/:id` or `update_calendar_task` — Update title, time, project, billable, or tags.
+- `DELETE /api/calendar/tasks/:id` or `delete_calendar_task` — Delete task.
+- `POST /api/calendar/tasks/:id/duplicate` or `duplicate_calendar_task` — Duplicate task.
+- `POST /api/calendar/tasks/:id/move` or `move_calendar_task` — Reschedule task to new date/time.
+- `GET /api/calendar/summaries` or `get_calendar_day_summaries` — Aggregated daily minutes & counts.
+- `GET /api/calendar/settings` or `get_calendar_settings` — Retrieve user calendar preferences.
+- `PUT /api/calendar/settings` or `update_calendar_settings` — Update preferences.
+- `GET /api/calendar/projects` or `list_calendar_projects` — List available projects.
+- `GET /api/calendar/tags` or `list_calendar_tags` — List available tags.
+
+---
+
+## 4. Separation of Concerns
 
 - **`backend/`**: Contains the standalone domain models, controllers, services, database seed, and documentation.
 - **`src-tauri/`**: Houses the native desktop Tauri runtime executing Rust commands.
 - **`src/`**: Houses all frontend React UI components, styles, and stores.
+

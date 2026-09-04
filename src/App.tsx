@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { TopHeader } from '@/components/layout/TopHeader';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TimeOffPage } from '@/components/timeoff/TimeOffPage';
+import { CalendarPage } from '@/components/calendar/CalendarPage';
 import { TrackerBar } from '@/components/tracker/TrackerBar';
 import { useTimerStore, TimeEntry } from '@/stores/useTimerStore';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<'tracker' | 'timeoff'>('timeoff');
+  const [currentView, setCurrentView] = useState<'tracker' | 'timeoff' | 'calendar'>('calendar');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { entries } = useTimerStore();
 
@@ -36,10 +37,13 @@ export default function App() {
           onSelectView={setCurrentView}
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+          
         />
 
         {/* View switching */}
-        {currentView === 'timeoff' ? (
+        {currentView === 'calendar' ? (
+          <CalendarPage />
+        ) : currentView === 'timeoff' ? (
           <TimeOffPage />
         ) : (
           <main className="flex-1 flex flex-col overflow-y-auto bg-slate-50">

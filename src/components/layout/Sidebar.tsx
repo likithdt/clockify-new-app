@@ -17,8 +17,8 @@ import {
 } from 'lucide-react';
 
 interface SidebarProps {
-  currentView: 'tracker' | 'timeoff';
-  onSelectView: (view: 'tracker' | 'timeoff') => void;
+  currentView: 'tracker' | 'timeoff' | 'calendar';
+  onSelectView: (view: 'tracker' | 'timeoff' | 'calendar') => void;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
 }
@@ -53,7 +53,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
 
           <button
-            className="w-full flex items-center justify-between px-3 py-2 text-slate-600 hover:bg-slate-50 border-l-4 border-transparent transition-colors"
+            onClick={() => onSelectView('calendar')}
+            className={`w-full flex items-center justify-between px-3 py-2 transition-colors ${
+              currentView === 'calendar'
+                ? 'bg-sky-50 text-[#03a9f4] font-semibold border-l-4 border-[#03a9f4]'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-l-4 border-transparent'
+            }`}
           >
             <div className="flex items-center gap-3">
               <Calendar className="w-4 h-4 shrink-0" />

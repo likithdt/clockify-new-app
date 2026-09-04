@@ -15,9 +15,10 @@ import {
     ChevronLeft,
     Bot,
     FileText,
+    CalendarRange,
 } from "lucide-react";
 
-export type PageRoute = "time-tracker" | "auto-tracker" | "activity" | "calendar" | "schedule" | "expenses" | "time-off" | "dashboard" | "reports" | "kiosks" | "approvals" | "projects" | "team" | "rates" | "invoices";
+export type PageRoute = "time-tracker" | "auto-tracker" | "timesheet" | "activity" | "calendar" | "schedule" | "expenses" | "time-off" | "dashboard" | "reports" | "kiosks" | "approvals" | "projects" | "team" | "rates" | "invoices";
 
 interface SidebarProps {
     activeRoute: PageRoute;
@@ -96,6 +97,21 @@ export function Sidebar({
                         <div className="flex items-center gap-2.5 truncate">
                             <Calendar className="w-4 h-4 text-[#64748b] flex-shrink-0" />
                             {!collapsed && <span className="truncate">CALENDAR</span>}
+                        </div>
+                    </button>
+
+                    <button
+                        onClick={() => onRouteChange("timesheet")}
+                        className={`w-full flex items-center justify-between px-2.5 py-2 rounded text-xs font-semibold uppercase tracking-wider transition ${
+                            activeRoute === "timesheet"
+                                ? "text-[#0288d1] bg-[#e1f5fe] border-l-4 border-[#03a9f4]"
+                                : "text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0f172a]"
+                        }`}
+                        title="Timesheet"
+                    >
+                        <div className="flex items-center gap-2.5 truncate">
+                            <CalendarRange className={`w-4 h-4 flex-shrink-0 ${activeRoute === "timesheet" ? "text-[#03a9f4]" : "text-[#64748b]"}`} />
+                            {!collapsed && <span className="truncate">TIMESHEET</span>}
                         </div>
                     </button>
 

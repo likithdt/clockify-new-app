@@ -11,10 +11,11 @@ import { TimeTrackerPage } from "@/components/tracker/TimeTrackerPage";
 import { ActivityPage } from "@/components/activity/ActivityPage";
 import { ProjectsPage } from "@/components/projects/ProjectsPage";
 import { AutoTrackerPage } from "@/components/autotracker/AutoTrackerPage";
+import { SchedulePage } from "@/components/schedule/SchedulePage";
 
 export default function App() {
-    // Default to "team" matching the Team feature request
-    const [activeRoute, setActiveRoute] = useState<PageRoute>("team");
+    // Default to "schedule" matching the Schedule feature request
+    const [activeRoute, setActiveRoute] = useState<PageRoute>("schedule");
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
     return (
@@ -37,7 +38,10 @@ export default function App() {
 
                 {/* Main View Area */}
                 <main className="flex-1 flex flex-col overflow-hidden min-w-0 bg-[#f5f6f8]">
-                    {activeRoute === "team" || activeRoute === "rates" ? (
+                    {activeRoute === "schedule" ? (
+                        /* Schedule feature matching Schedule.png */
+                        <SchedulePage />
+                    ) : activeRoute === "team" || activeRoute === "rates" ? (
                         /* Rates & Team feature matching Team.png, Team (Billable rate).png, Team(CostRate).png, etc. */
                         <TeamPage />
                     ) : activeRoute === "approvals" ? (

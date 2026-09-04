@@ -24,7 +24,7 @@ const SUMMARY_PROJECTS: ProjectBreakdownItem[] = [
         title: "[SAMPLE] Internal Project",
         color: "#03A9F4",
         duration: "16:00:00",
-        amount: "0,00 USD",
+        amount: "0,00 INR",
         percent: 25,
     },
     {
@@ -34,7 +34,7 @@ const SUMMARY_PROJECTS: ProjectBreakdownItem[] = [
         client: "[SAMPLE] Client B",
         color: "#F59E0B",
         duration: "14:00:00",
-        amount: "60,00 USD",
+        amount: "60,00 INR",
         percent: 21.875,
     },
     {
@@ -44,7 +44,7 @@ const SUMMARY_PROJECTS: ProjectBreakdownItem[] = [
         client: "[SAMPLE] Client A",
         color: "#EF4444",
         duration: "18:00:00",
-        amount: "75,00 USD",
+        amount: "75,00 INR",
         percent: 28.125,
     },
     {
@@ -54,7 +54,7 @@ const SUMMARY_PROJECTS: ProjectBreakdownItem[] = [
         client: "[SAMPLE] Client A",
         color: "#6D4C41",
         duration: "16:00:00",
-        amount: "195,00 USD",
+        amount: "195,00 INR",
         percent: 25,
     },
 ];
@@ -82,7 +82,7 @@ export function SummaryReportView() {
                     <div>
                         <span className="text-xs text-[#64748B] mr-1.5">Amount:</span>
                         <strong className="font-bold text-base text-[#1E293B]">330,00</strong>
-                        <span className="text-xs text-[#64748B] ml-1 font-semibold">USD</span>
+                        <span className="text-xs text-[#64748B] ml-1 font-semibold">INR</span>
                     </div>
                 </div>
 

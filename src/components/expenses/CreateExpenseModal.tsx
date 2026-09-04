@@ -66,7 +66,7 @@ export function CreateExpenseModal({ isOpen, onClose }: CreateExpenseModalProps)
             projectColor: project?.color || "#03A9F4",
             category,
             amount: parsedAmount,
-            currency: "USD",
+            currency: "INR",
             note: note.trim(),
             billable,
             receiptName: attachedFile || undefined,
@@ -287,7 +287,7 @@ export function CreateExpenseModal({ isOpen, onClose }: CreateExpenseModalProps)
                                 className="w-full h-9 pl-3 pr-14 bg-white border border-[#d1d5db] rounded text-xs text-[#1f2937] focus:outline-none focus:border-[#03a9f4]"
                             />
                             <span className="absolute right-3 text-xs font-semibold text-[#9ca3af] pointer-events-none">
-                                USD
+                                INR
                             </span>
                         </div>
                     </div>

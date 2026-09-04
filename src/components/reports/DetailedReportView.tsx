@@ -1,4 +1,4 @@
-import { Calendar, User, Clock, DollarSign } from "lucide-react";
+import { Calendar, User, Clock, IndianRupee } from "lucide-react";
 
 interface DetailedEntry {
     id: string;
@@ -27,7 +27,7 @@ const DETAILED_RECORDS: DetailedEntry[] = [
         client: "[SAMPLE] Client B",
         timeSpan: "08:00 - 11:30",
         duration: "03:30:00",
-        amount: "$315.00",
+        amount: "₹315.00",
         isBillable: true,
     },
     {
@@ -41,7 +41,7 @@ const DETAILED_RECORDS: DetailedEntry[] = [
         client: "[SAMPLE] Client A",
         timeSpan: "12:30 - 16:15",
         duration: "03:45:00",
-        amount: "$337.50",
+        amount: "₹337.50",
         isBillable: true,
     },
     {
@@ -54,7 +54,7 @@ const DETAILED_RECORDS: DetailedEntry[] = [
         projectColor: "#03A9F4",
         timeSpan: "09:00 - 13:00",
         duration: "04:00:00",
-        amount: "$0.00",
+        amount: "₹0.00",
         isBillable: false,
     },
     {
@@ -68,7 +68,7 @@ const DETAILED_RECORDS: DetailedEntry[] = [
         client: "[SAMPLE] Client A",
         timeSpan: "14:00 - 18:00",
         duration: "04:00:00",
-        amount: "$360.00",
+        amount: "₹360.00",
         isBillable: true,
     },
 ];
@@ -112,7 +112,7 @@ export function DetailedReportView() {
                             <th className="py-3 px-4 text-right">Duration</th>
                             <th className="py-3 px-4 text-right">
                                 <span className="inline-flex items-center gap-1 justify-end">
-                                    <DollarSign className="w-3.5 h-3.5 text-[#94A3B8]" />
+                                    <IndianRupee className="w-3.5 h-3.5 text-[#94A3B8]" />
                                     Amount
                                 </span>
                             </th>

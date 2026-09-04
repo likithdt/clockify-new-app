@@ -13,8 +13,8 @@ import { ProjectsPage } from "@/components/projects/ProjectsPage";
 import { AutoTrackerPage } from "@/components/autotracker/AutoTrackerPage";
 
 export default function App() {
-    // Default to "projects" matching the Projects feature request
-    const [activeRoute, setActiveRoute] = useState<PageRoute>("projects");
+    // Default to "team" matching the Team feature request
+    const [activeRoute, setActiveRoute] = useState<PageRoute>("team");
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
     return (

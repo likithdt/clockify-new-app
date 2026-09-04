@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, DollarSign } from "lucide-react";
+import { X, IndianRupee } from "lucide-react";
 import { useTeamStore } from "@/stores/useTeamStore";
 
 export function ChangeRateModal() {
@@ -45,10 +45,10 @@ export function ChangeRateModal() {
                             Team member: <span className="font-semibold text-[#1f2937]">{editingRate.memberName}</span>
                         </div>
                         <label className="block text-xs font-medium text-[#4b5563] mt-3 mb-1.5">
-                            New {isBillable ? "billable" : "cost"} rate (USD/h)
+                            New {isBillable ? "billable" : "cost"} rate (INR/h)
                         </label>
                         <div className="relative flex items-center">
-                            <DollarSign className="w-4 h-4 text-[#9ca3af] absolute left-3 pointer-events-none" />
+                            <IndianRupee className="w-4 h-4 text-[#9ca3af] absolute left-3 pointer-events-none" />
                             <input
                                 type="number"
                                 step="0.01"
@@ -60,7 +60,7 @@ export function ChangeRateModal() {
                                 className="w-full h-9 pl-9 pr-14 bg-white border border-[#d1d5db] rounded text-xs text-[#1f2937] focus:outline-none focus:border-[#03a9f4]"
                             />
                             <span className="absolute right-3 text-[11px] font-semibold text-[#9ca3af]">
-                                USD / h
+                                INR / h
                             </span>
                         </div>
                     </div>

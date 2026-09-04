@@ -94,7 +94,7 @@ export function ProjectsTable() {
 
     const handleExport = (format: "csv" | "excel") => {
         setIsExportOpen(false);
-        const headers = ["Name", "Client", "Tracked (h)", "Amount (USD)", "Progress (%)", "Access"];
+        const headers = ["Name", "Client", "Tracked (h)", "Amount (INR)", "Progress (%)", "Access"];
         const rows = sortedProjects.map((p) => [
             `"${p.name}"`,
             `"${p.client || "--"}"`,
@@ -316,7 +316,7 @@ export function ProjectsTable() {
                                     </span>
                                     {project.budgetAmount && (
                                         <span className="text-[11px] text-[#94a3b8]">
-                                            of {formatNumber(project.budgetAmount)} USD
+                                            of {formatNumber(project.budgetAmount)} {project.currency || "INR"}
                                         </span>
                                     )}
                                 </div>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Plus, Trash2, Settings, DollarSign } from "lucide-react";
+import { X, Plus, Trash2, Settings, IndianRupee } from "lucide-react";
 import { useExpenseStore } from "@/stores/useExpenseStore";
 
 interface ExpenseSettingsModalProps {
@@ -11,7 +11,7 @@ export function ExpenseSettingsModal({ isOpen, onClose }: ExpenseSettingsModalPr
     const { categories } = useExpenseStore();
     const [categoryList, setCategoryList] = useState<string[]>(categories);
     const [newCategoryName, setNewCategoryName] = useState("");
-    const [defaultCurrency, setDefaultCurrency] = useState("USD");
+    const [defaultCurrency, setDefaultCurrency] = useState("INR");
     const [defaultBillable, setDefaultBillable] = useState(true);
 
     if (!isOpen) return null;
@@ -55,7 +55,7 @@ export function ExpenseSettingsModal({ isOpen, onClose }: ExpenseSettingsModalPr
                         </label>
                         <div className="flex items-center gap-3">
                             <div className="relative flex-1">
-                                <DollarSign className="w-4 h-4 text-[#9ca3af] absolute left-3 top-2.5" />
+                                <IndianRupee className="w-4 h-4 text-[#9ca3af] absolute left-3 top-2.5" />
                                 <input
                                     type="text"
                                     value={defaultCurrency}

@@ -255,6 +255,14 @@ class CalendarService {
     return { ...newProj };
   }
 
+  public deleteProject(id: string): void {
+    const idx = this.projects.findIndex((p) => p.id === id);
+    if (idx === -1) {
+      throw new Error(`Project with ID '${id}' not found`);
+    }
+    this.projects.splice(idx, 1);
+  }
+
   public listTags(): TagItem[] {
     return [...this.tags];
   }
@@ -270,6 +278,71 @@ class CalendarService {
     return { ...newTag };
   }
 
+  public deleteTag(id: string): void {
+    const idx = this.tags.findIndex((t) => t.id === id);
+    if (idx === -1) {
+      throw new Error(`Tag with ID '${id}' not found`);
+    }
+    this.tags.splice(idx, 1);
+  }
+
+  public getMonthSummary(yearMonth: string, memberId?: string) {
+    const tasks = this.tasks.filter((t) => {
+      if (!t.date.startsWith(yearMonth)) return false;
+      if (memberId && t.member_id !== memberId) return false;
+      return true;
+    });
+
+    let totalTracked = 0;
+    let totalPlanned = 0;
+    const daysSet = new Set<string>();
+
+    for (const t of tasks) {
+      daysSet.add(t.date);
+      if (t.entry_type === 'entry') {
+        totalTracked += t.duration_minutes;
+      } else {
+        totalPlanned += t.duration_minutes;
+      }
+    }
+
+    return {
+      month: yearMonth,
+      total_tracked_minutes: totalTracked,
+      total_planned_minutes: totalPlanned,
+      total_tasks: tasks.length,
+      days_with_entries: daysSet.size,
+    };
+  }
+
+  public exportCalendarICS(memberId?: string): string {
+    const filtered = memberId ? this.tasks.filter((t) => t.member_id === memberId) : this.tasks;
+    let ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Clockify Desktop//Calendar//EN\r\nCALSCALE:GREGORIAN\r\n";
+
+    for (const t of filtered) {
+      const dateClean = t.date.replace(/-/g, '');
+      const startClean = t.start_time.replace(/:/g, '');
+      const endClean = t.end_time.replace(/:/g, '');
+
+      ics += "BEGIN:VEVENT\r\n";
+      ics += `UID:${t.id}\r\n`;
+      ics += `DTSTART:${dateClean}T${startClean}00Z\r\n`;
+      ics += `DTEND:${dateClean}T${endClean}00Z\r\n`;
+      ics += `SUMMARY:${t.title}\r\n`;
+      ics += `DESCRIPTION:Project: ${t.project_name} | Billable: ${t.is_billable}\r\n`;
+      ics += "STATUS:CONFIRMED\r\n";
+      ics += "END:VEVENT\r\n";
+    }
+
+    ics += "END:VCALENDAR\r\n";
+    return ics;
+  }
+
+  public listMembers() {
+    const rawData = seedData as any;
+    return rawData.members || [];
+  }
+
   public resetSampleData(): void {
     const rawData = seedData as any;
     this.tasks = JSON.parse(JSON.stringify(rawData.calendar_tasks || []));
@@ -279,3 +352,4 @@ class CalendarService {
 }
 
 export const calendarService = new CalendarService();
+

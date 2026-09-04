@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { expenseApi } from "@/lib/expenseApi";
 
 export interface Expense {
     id: string;
@@ -23,8 +24,10 @@ interface ExpenseState {
     isSettingsModalOpen: boolean;
     categories: string[];
     teammates: string[];
+    isLoading: boolean;
 
     // Actions
+    loadFromBackend: () => Promise<void>;
     addExpense: (expense: Omit<Expense, "id" | "createdAt">) => void;
     deleteExpense: (id: string) => void;
     setSelectedTeammate: (teammate: string) => void;
@@ -32,14 +35,17 @@ interface ExpenseState {
     setSettingsModalOpen: (open: boolean) => void;
     clearAllExpenses: () => void;
     loadSampleData: () => void;
+    addCategory: (name: string) => Promise<void>;
+    removeCategory: (name: string) => Promise<void>;
 }
 
-export const useExpenseStore = create<ExpenseState>((set) => ({
+export const useExpenseStore = create<ExpenseState>((set, get) => ({
     // Initially empty to match Expenses.png exactly which displays the "No results" empty state
     expenses: [],
     selectedTeammate: "",
     isCreateModalOpen: false,
     isSettingsModalOpen: false,
+    isLoading: false,
     categories: [
         "Day rate",
         "Travel",
@@ -56,24 +62,78 @@ export const useExpenseStore = create<ExpenseState>((set) => ({
         "Lara Peterson",
         "Jane Doe",
         "Alex Miller",
+        "Amy Smith",
     ],
 
+    loadFromBackend: async () => {
+        set({ isLoading: true });
+        try {
+            const [backendExpenses, categories, settings] = await Promise.all([
+                expenseApi.listExpenses(),
+                expenseApi.listCategories(),
+                expenseApi.getSettings(),
+            ]);
+
+            const mapped: Expense[] = backendExpenses.map((e) => ({
+                id: e.id,
+                teamMember: e.team_member,
+                date: e.date,
+                projectId: e.project_id,
+                projectName: e.project_name,
+                projectColor: e.project_color,
+                category: e.category,
+                amount: e.amount,
+                currency: e.currency,
+                note: e.note,
+                billable: e.billable,
+                receiptName: e.receipt_name,
+                createdAt: e.created_at,
+            }));
+
+            set({
+                expenses: mapped,
+                categories: categories.length > 0 ? categories : settings.categories,
+                isLoading: false,
+            });
+        } catch (e) {
+            console.warn("Could not load expenses from backend:", e);
+            set({ isLoading: false });
+        }
+    },
+
     addExpense: (expense) => {
+        const id = `exp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
         const newExpense: Expense = {
             ...expense,
-            id: `exp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            id,
             createdAt: new Date().toISOString(),
         };
+
         set((state) => ({
             expenses: [newExpense, ...state.expenses],
             isCreateModalOpen: false,
         }));
+
+        expenseApi.createExpense({
+            team_member: expense.teamMember,
+            date: expense.date,
+            project_id: expense.projectId,
+            project_name: expense.projectName,
+            project_color: expense.projectColor,
+            category: expense.category,
+            amount: expense.amount,
+            currency: expense.currency,
+            note: expense.note,
+            billable: expense.billable,
+            receipt_name: expense.receiptName,
+        }).catch(console.error);
     },
 
     deleteExpense: (id) => {
         set((state) => ({
             expenses: state.expenses.filter((e) => e.id !== id),
         }));
+        expenseApi.deleteExpense(id).catch(console.error);
     },
 
     setSelectedTeammate: (teammate) => {
@@ -90,6 +150,7 @@ export const useExpenseStore = create<ExpenseState>((set) => ({
 
     clearAllExpenses: () => {
         set({ expenses: [] });
+        expenseApi.clearAllExpenses().catch(console.error);
     },
 
     loadSampleData: () => {
@@ -140,5 +201,19 @@ export const useExpenseStore = create<ExpenseState>((set) => ({
             },
         ];
         set({ expenses: sampleExpenses });
+    },
+
+    addCategory: async (name: string) => {
+        const trimmed = name.trim();
+        if (!trimmed) return;
+        if (!get().categories.includes(trimmed)) {
+            set((state) => ({ categories: [...state.categories, trimmed] }));
+            await expenseApi.createCategory(trimmed).catch(console.error);
+        }
+    },
+
+    removeCategory: async (name: string) => {
+        set((state) => ({ categories: state.categories.filter((c) => c !== name) }));
+        await expenseApi.deleteCategory(name).catch(console.error);
     },
 }));

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { kioskApi } from "@/lib/kioskApi";
 
 export interface KioskDevice {
     id: string;
@@ -33,8 +34,10 @@ interface KioskState {
     terminalStatus: "IDLE" | "AUTHENTICATED" | "SUCCESS";
     successMessage: string | null;
     records: AttendanceRecord[];
+    isLoading: boolean;
 
     // Actions
+    loadFromBackend: () => Promise<void>;
     openCreateModal: () => void;
     closeCreateModal: () => void;
     createKiosk: (params: {
@@ -64,13 +67,56 @@ export const useKioskStore = create<KioskState>((set, get) => ({
     terminalStatus: "IDLE",
     successMessage: null,
     records: [],
+    isLoading: false,
+
+    loadFromBackend: async () => {
+        set({ isLoading: true });
+        try {
+            const list = await kioskApi.listKiosks();
+            if (list && list.length > 0) {
+                const mapped: KioskDevice[] = list.map((k) => ({
+                    id: k.id,
+                    name: k.name,
+                    assignees: k.assignees,
+                    defaultProject: k.default_project,
+                    defaultBreakProject: k.default_break_project,
+                    logoutAfterHours: k.logout_after_hours,
+                    authRequired: k.auth_required,
+                    location: k.location,
+                    deviceIp: k.device_ip,
+                    todayCheckIns: k.today_check_ins,
+                    status: k.status,
+                    createdAt: new Date(k.created_at),
+                }));
+                set({ kiosks: mapped });
+            }
+
+            const recs = await kioskApi.listAttendanceRecords();
+            if (recs && recs.length > 0) {
+                const mappedRecs: AttendanceRecord[] = recs.map((r) => ({
+                    id: r.id,
+                    kioskId: r.kiosk_id,
+                    kioskName: r.kiosk_name,
+                    userName: r.user_name,
+                    action: r.action,
+                    timestamp: new Date(r.timestamp),
+                }));
+                set({ records: mappedRecs });
+            }
+            set({ isLoading: false });
+        } catch (e) {
+            console.warn("Could not load kiosks from backend:", e);
+            set({ isLoading: false });
+        }
+    },
 
     openCreateModal: () => set({ isCreateModalOpen: true }),
     closeCreateModal: () => set({ isCreateModalOpen: false }),
 
     createKiosk: (params) => {
+        const id = `kiosk-${Date.now()}`;
         const newKiosk: KioskDevice = {
-            id: `kiosk-${Date.now()}`,
+            id,
             name: params.name,
             assignees: params.assignees.length > 0 ? params.assignees : ["All Members"],
             defaultProject: params.defaultProject || "Internal Work",
@@ -88,14 +134,25 @@ export const useKioskStore = create<KioskState>((set, get) => ({
             kiosks: [newKiosk, ...state.kiosks],
             isCreateModalOpen: false,
         }));
+
+        kioskApi.createKiosk({
+            name: params.name,
+            assignees: params.assignees,
+            default_project: params.defaultProject,
+            default_break_project: params.defaultBreakProject,
+            logout_after_hours: params.logoutAfterHours,
+            auth_required: params.authRequired,
+        }).catch(console.error);
     },
 
-    deleteKiosk: (id) =>
+    deleteKiosk: (id) => {
         set((state) => ({
             kiosks: state.kiosks.filter((k) => k.id !== id),
             activeTerminalKioskId:
                 state.activeTerminalKioskId === id ? null : state.activeTerminalKioskId,
-        })),
+        }));
+        kioskApi.deleteKiosk(id).catch(console.error);
+    },
 
     launchTerminal: (id) =>
         set({
@@ -122,7 +179,6 @@ export const useKioskStore = create<KioskState>((set, get) => ({
             const nextPin = terminalPin + digit;
             set({ terminalPin: nextPin });
 
-            // Automatically verify when 4 digits reached
             if (nextPin.length === 4) {
                 setTimeout(() => {
                     get().submitTerminalPin();
@@ -133,11 +189,25 @@ export const useKioskStore = create<KioskState>((set, get) => ({
 
     clearTerminalPin: () => set({ terminalPin: "", terminalStatus: "IDLE" }),
 
-    submitTerminalPin: () => {
-        const { terminalPin } = get();
+    submitTerminalPin: async () => {
+        const { terminalPin, activeTerminalKioskId } = get();
         if (terminalPin.length !== 4) return;
 
-        // Any 4 digit pin authenticates a member for demonstration
+        try {
+            if (activeTerminalKioskId) {
+                const res = await kioskApi.verifyPin(activeTerminalKioskId, terminalPin);
+                if (res.valid && res.userName) {
+                    set({
+                        terminalStatus: "AUTHENTICATED",
+                        terminalUser: res.userName,
+                    });
+                    return;
+                }
+            }
+        } catch (e) {
+            console.warn("Backend pin verification fallback:", e);
+        }
+
         const sampleMembers = [
             "Bindhu Shree",
             "Likith D T",
@@ -155,7 +225,7 @@ export const useKioskStore = create<KioskState>((set, get) => ({
     },
 
     recordAttendance: (action) => {
-        const { activeTerminalKioskId, kiosks, terminalUser } = get();
+        const { activeTerminalKioskId, kiosks, terminalUser, terminalPin } = get();
         const kiosk = kiosks.find((k) => k.id === activeTerminalKioskId);
         const userName = terminalUser || "Member";
 
@@ -185,6 +255,15 @@ export const useKioskStore = create<KioskState>((set, get) => ({
                     : k
             ),
         }));
+
+        if (activeTerminalKioskId) {
+            kioskApi.recordAttendance({
+                kiosk_id: activeTerminalKioskId,
+                user_name: userName,
+                action,
+                pin_code: terminalPin,
+            }).catch(console.error);
+        }
 
         setTimeout(() => {
             get().resetTerminal();

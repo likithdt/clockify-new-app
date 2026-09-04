@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import { activityApi } from "@/lib/activityApi";
+import type { ScreenshotCategory, MemberLocationStatus } from "@backend/models/activityLocationTypes";
 
 export interface ScreenshotItem {
     id: string;
@@ -69,6 +71,10 @@ interface ActivityState {
     setUserLiveCoords: (coords: { lat: number; lng: number; address: string }) => void;
     members: MemberLocation[];
     updateMemberLocation: (id: string, lat: number, lng: number, address?: string) => void;
+
+    // Backend Synchronizer
+    isLoading: boolean;
+    loadFromBackend: () => Promise<void>;
 }
 
 const INITIAL_MEMBERS: MemberLocation[] = [
@@ -258,50 +264,169 @@ const INITIAL_SCREENSHOTS: ScreenshotItem[] = [
     },
 ];
 
-export const useActivityStore = create<ActivityState>((set) => ({
+export const useActivityStore = create<ActivityState>((set, get) => ({
     activeSubTab: "screenshots",
     setActiveSubTab: (activeSubTab) => set({ activeSubTab }),
 
-    isMonitoringActive: false,
-    isScreenshotsActive: false,
-    isGpsActive: false,
+    isMonitoringActive: true,
+    isScreenshotsActive: true,
+    isGpsActive: true,
+    isLoading: false,
 
-    toggleMonitoring: () => set((s) => ({ isMonitoringActive: !s.isMonitoringActive })),
-    setMonitoringActive: (active) => set({ isMonitoringActive: active }),
+    loadFromBackend: async () => {
+        set({ isLoading: true });
+        try {
+            const [settings, screenshots, locations] = await Promise.all([
+                activityApi.getActivitySettings(),
+                activityApi.listScreenshots(),
+                activityApi.listMemberLocations(),
+            ]);
 
-    toggleScreenshots: () => set((s) => ({ isScreenshotsActive: !s.isScreenshotsActive })),
-    setScreenshotsActive: (active) => set({ isScreenshotsActive: active }),
-
-    toggleGps: () =>
-        set((s) => {
-            const nextGps = !s.isGpsActive;
-            const updatedMembers = s.members.map((m) => {
-                if (nextGps) {
-                    const times: Record<string, string> = {
-                        "amy-smith": "10:42 AM",
-                        "james-anderson": "10:15 AM",
-                        "lara-peterson": "10:45 AM",
-                        "mike-johnson": "10:20 AM",
-                        "bindhu-shree": "Just now",
-                    };
-                    return { ...m, lastSeen: times[m.id] || "Just now" };
-                } else {
-                    return { ...m, lastSeen: "-" };
-                }
-            });
-            return { isGpsActive: nextGps, members: updatedMembers };
-        }),
-    setGpsActive: (active) =>
-        set((s) => {
-            const updatedMembers = s.members.map((m) => ({
-                ...m,
-                lastSeen: active ? "Just now" : "-",
+            const mappedScreenshots: ScreenshotItem[] = screenshots.map((s) => ({
+                id: s.id,
+                memberId: s.member_id,
+                memberName: s.member_name,
+                memberAvatar: s.member_avatar,
+                timestamp: s.timestamp,
+                timeFormatted: s.time_formatted,
+                project: s.project,
+                projectColor: s.project_color,
+                activityPercent: s.activity_percent,
+                appName: s.app_name,
+                windowTitle: s.window_title,
+                codeSnippet: s.code_snippet,
+                type: (s.type as "figma" | "code" | "browser" | "slack" | "terminal") || "code",
             }));
-            return { isGpsActive: active, members: updatedMembers };
-        }),
+
+            const mappedMembers: MemberLocation[] = locations.map((m) => ({
+                id: m.id,
+                name: m.name,
+                role: m.role,
+                avatar: m.avatar,
+                avatarColor: m.avatar_color,
+                isCurrentUser: m.is_current_user,
+                lastSeen: m.last_seen,
+                status: m.status as MemberLocationStatus,
+                statusColor: m.status_color,
+                locationName: m.location_name,
+                lat: m.lat,
+                lng: m.lng,
+                speed: m.speed,
+                battery: m.battery,
+                breadcrumbs: m.breadcrumbs || [],
+            }));
+
+            set({
+                isMonitoringActive: settings.is_monitoring_active,
+                isScreenshotsActive: settings.is_screenshots_active,
+                isGpsActive: settings.is_gps_active,
+                blurPrivacy: settings.blur_privacy,
+                screenshots: mappedScreenshots.length > 0 ? mappedScreenshots : INITIAL_SCREENSHOTS,
+                members: mappedMembers.length > 0 ? mappedMembers : INITIAL_MEMBERS,
+            });
+        } catch (e) {
+            console.warn("Could not load activity data from backend:", e);
+        } finally {
+            set({ isLoading: false });
+        }
+    },
+
+    toggleMonitoring: () => {
+        const next = !get().isMonitoringActive;
+        set({ isMonitoringActive: next });
+        activityApi.updateActivitySettings({
+            is_monitoring_active: next,
+            is_screenshots_active: get().isScreenshotsActive,
+            is_gps_active: get().isGpsActive,
+            blur_privacy: get().blurPrivacy,
+            screenshot_frequency_minutes: 5,
+        }).catch(console.error);
+    },
+    setMonitoringActive: (active) => {
+        set({ isMonitoringActive: active });
+        activityApi.updateActivitySettings({
+            is_monitoring_active: active,
+            is_screenshots_active: get().isScreenshotsActive,
+            is_gps_active: get().isGpsActive,
+            blur_privacy: get().blurPrivacy,
+            screenshot_frequency_minutes: 5,
+        }).catch(console.error);
+    },
+
+    toggleScreenshots: () => {
+        const next = !get().isScreenshotsActive;
+        set({ isScreenshotsActive: next });
+        activityApi.updateActivitySettings({
+            is_monitoring_active: get().isMonitoringActive,
+            is_screenshots_active: next,
+            is_gps_active: get().isGpsActive,
+            blur_privacy: get().blurPrivacy,
+            screenshot_frequency_minutes: 5,
+        }).catch(console.error);
+    },
+    setScreenshotsActive: (active) => {
+        set({ isScreenshotsActive: active });
+        activityApi.updateActivitySettings({
+            is_monitoring_active: get().isMonitoringActive,
+            is_screenshots_active: active,
+            is_gps_active: get().isGpsActive,
+            blur_privacy: get().blurPrivacy,
+            screenshot_frequency_minutes: 5,
+        }).catch(console.error);
+    },
+
+    toggleGps: () => {
+        const nextGps = !get().isGpsActive;
+        const updatedMembers = get().members.map((m) => {
+            if (nextGps) {
+                const times: Record<string, string> = {
+                    "amy-smith": "10:42 AM",
+                    "james-anderson": "10:15 AM",
+                    "lara-peterson": "10:45 AM",
+                    "mike-johnson": "10:20 AM",
+                    "bindhu-shree": "Just now",
+                };
+                return { ...m, lastSeen: times[m.id] || "Just now" };
+            } else {
+                return { ...m, lastSeen: "-" };
+            }
+        });
+        set({ isGpsActive: nextGps, members: updatedMembers });
+        activityApi.updateActivitySettings({
+            is_monitoring_active: get().isMonitoringActive,
+            is_screenshots_active: get().isScreenshotsActive,
+            is_gps_active: nextGps,
+            blur_privacy: get().blurPrivacy,
+            screenshot_frequency_minutes: 5,
+        }).catch(console.error);
+    },
+    setGpsActive: (active) => {
+        const updatedMembers = get().members.map((m) => ({
+            ...m,
+            lastSeen: active ? "Just now" : "-",
+        }));
+        set({ isGpsActive: active, members: updatedMembers });
+        activityApi.updateActivitySettings({
+            is_monitoring_active: get().isMonitoringActive,
+            is_screenshots_active: get().isScreenshotsActive,
+            is_gps_active: active,
+            blur_privacy: get().blurPrivacy,
+            screenshot_frequency_minutes: 5,
+        }).catch(console.error);
+    },
 
     blurPrivacy: false,
-    toggleBlurPrivacy: () => set((s) => ({ blurPrivacy: !s.blurPrivacy })),
+    toggleBlurPrivacy: () => {
+        const next = !get().blurPrivacy;
+        set({ blurPrivacy: next });
+        activityApi.updateActivitySettings({
+            is_monitoring_active: get().isMonitoringActive,
+            is_screenshots_active: get().isScreenshotsActive,
+            is_gps_active: get().isGpsActive,
+            blur_privacy: next,
+            screenshot_frequency_minutes: 5,
+        }).catch(console.error);
+    },
 
     selectedTeammate: "all",
     setSelectedTeammate: (selectedTeammate) => set({ selectedTeammate }),
@@ -310,20 +435,37 @@ export const useActivityStore = create<ActivityState>((set) => ({
     setSelectedDate: (selectedDate) => set({ selectedDate }),
 
     screenshots: INITIAL_SCREENSHOTS,
-    addScreenshot: (item) =>
-        set((s) => ({
-            screenshots: [{ ...item, id: `sc-${Date.now()}` }, ...s.screenshots],
-        })),
-    deleteScreenshot: (id) =>
+    addScreenshot: (item) => {
+        const id = `sc-${Date.now()}`;
+        const newScreenshot: ScreenshotItem = { ...item, id };
+        set((s) => ({ screenshots: [newScreenshot, ...s.screenshots] }));
+
+        activityApi.captureScreenshot({
+            member_id: item.memberId,
+            member_name: item.memberName,
+            member_avatar: item.memberAvatar,
+            time_formatted: item.timeFormatted,
+            project: item.project,
+            project_color: item.projectColor,
+            activity_percent: item.activityPercent,
+            app_name: item.appName,
+            window_title: item.windowTitle,
+            code_snippet: item.codeSnippet,
+            type: item.type as ScreenshotCategory,
+        }).catch(console.error);
+    },
+    deleteScreenshot: (id) => {
         set((s) => ({
             screenshots: s.screenshots.filter((item) => item.id !== id),
-        })),
+        }));
+        activityApi.deleteScreenshot(id).catch(console.error);
+    },
 
     selectedMemberId: null,
     setSelectedMemberId: (selectedMemberId) => set({ selectedMemberId }),
 
     userLiveCoords: null,
-    setUserLiveCoords: (coords) =>
+    setUserLiveCoords: (coords) => {
         set((s) => ({
             userLiveCoords: coords,
             members: s.members.map((m) =>
@@ -337,10 +479,20 @@ export const useActivityStore = create<ActivityState>((set) => ({
                       }
                     : m
             ),
-        })),
+        }));
+
+        const current = get().members.find((m) => m.isCurrentUser);
+        if (current) {
+            activityApi.updateMemberLocation(current.id, {
+                lat: coords.lat,
+                lng: coords.lng,
+                location_name: coords.address || current.locationName,
+            }).catch(console.error);
+        }
+    },
 
     members: INITIAL_MEMBERS,
-    updateMemberLocation: (id, lat, lng, address) =>
+    updateMemberLocation: (id, lat, lng, address) => {
         set((s) => ({
             members: s.members.map((m) =>
                 m.id === id
@@ -353,5 +505,12 @@ export const useActivityStore = create<ActivityState>((set) => ({
                       }
                     : m
             ),
-        })),
+        }));
+
+        activityApi.updateMemberLocation(id, {
+            lat,
+            lng,
+            location_name: address,
+        }).catch(console.error);
+    },
 }));

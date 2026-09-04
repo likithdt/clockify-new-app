@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { scheduleApi } from "@/lib/scheduleApi";
 
 export interface ScheduleAssignment {
     id: string;
@@ -55,8 +56,10 @@ interface ScheduleState {
     isAddModalOpen: boolean;
     isRemoveSampleModalOpen: boolean;
     selectedAssignmentForEdit: ScheduleAssignment | null;
+    isLoading: boolean;
 
     // Actions
+    loadFromBackend: () => Promise<void>;
     setActiveTab: (tab: "projects" | "team") => void;
     setDateRange: (range: { startDate: string; endDate: string }) => void;
     navigateDateRange: (direction: "prev" | "next") => void;
@@ -224,6 +227,42 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
     isRemoveSampleModalOpen: false,
     selectedAssignmentForEdit: null,
     assignments: INITIAL_SAMPLE_ASSIGNMENTS,
+    isLoading: false,
+
+    loadFromBackend: async () => {
+        set({ isLoading: true });
+        try {
+            const list = await scheduleApi.listAssignments();
+            if (list && list.length > 0) {
+                const mapped: ScheduleAssignment[] = list.map((a) => ({
+                    id: a.id,
+                    projectId: a.project_id,
+                    projectName: a.project_name,
+                    projectColor: a.project_color,
+                    client: a.client,
+                    memberId: a.member_id,
+                    memberName: a.member_name,
+                    memberInitials: a.member_initials,
+                    memberAvatarColor: a.member_avatar_color,
+                    startDate: a.start_date,
+                    endDate: a.end_date,
+                    hoursPerDay: a.hours_per_day,
+                    totalHours: a.total_hours,
+                    note: a.note,
+                    versionLabel: a.version_label,
+                    isHatched: a.is_hatched,
+                    isMilestoneActive: a.is_milestone_active,
+                }));
+                const hasSample = mapped.some((a) => a.projectName.includes("[SAMPLE]"));
+                set({ assignments: mapped, hasSampleData: hasSample, isLoading: false });
+            } else {
+                set({ isLoading: false });
+            }
+        } catch (e) {
+            console.warn("Could not load schedule from backend:", e);
+            set({ isLoading: false });
+        }
+    },
 
     setActiveTab: (tab) => set({ activeTab: tab }),
 
@@ -315,6 +354,7 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
             assignments: [],
             isRemoveSampleModalOpen: false,
         });
+        scheduleApi.removeSampleSchedule().catch(console.error);
     },
 
     restoreSampleData: () => {
@@ -324,10 +364,12 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
             expandedProjectIds: ["proj-alpha", "proj-beta", "proj-gamma"],
             expandedMemberIds: ["tm-bindhu", "tm-likith", "tm-james", "tm-lara"],
         });
+        scheduleApi.restoreSampleSchedule().catch(console.error);
     },
 
     togglePublish: () => {
         set((state) => ({ isPublished: !state.isPublished }));
+        scheduleApi.togglePublish().catch(console.error);
     },
 
     addAssignment: (newAssignmentData) => {
@@ -344,11 +386,31 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
             expandedProjectIds: Array.from(new Set([...state.expandedProjectIds, newAssignment.projectId])),
             expandedMemberIds: Array.from(new Set([...state.expandedMemberIds, newAssignment.memberId])),
         }));
+
+        scheduleApi.createAssignment({
+            project_id: newAssignmentData.projectId,
+            project_name: newAssignmentData.projectName,
+            project_color: newAssignmentData.projectColor,
+            client: newAssignmentData.client,
+            member_id: newAssignmentData.memberId,
+            member_name: newAssignmentData.memberName,
+            member_initials: newAssignmentData.memberInitials,
+            member_avatar_color: newAssignmentData.memberAvatarColor,
+            start_date: newAssignmentData.startDate,
+            end_date: newAssignmentData.endDate,
+            hours_per_day: newAssignmentData.hoursPerDay,
+            total_hours: newAssignmentData.totalHours,
+            note: newAssignmentData.note,
+            version_label: newAssignmentData.versionLabel,
+            is_hatched: newAssignmentData.isHatched,
+            is_milestone_active: newAssignmentData.isMilestoneActive,
+        }).catch(console.error);
     },
 
     deleteAssignment: (id) => {
         set((state) => ({
             assignments: state.assignments.filter((a) => a.id !== id),
         }));
+        scheduleApi.deleteAssignment(id).catch(console.error);
     },
 }));

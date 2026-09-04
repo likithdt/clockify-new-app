@@ -106,3 +106,13 @@ pub struct CalendarDaySummary {
     pub total_planned_minutes: i64,
     pub task_count: i64,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarMonthSummary {
+    pub month: String,
+    pub total_tracked_minutes: i64,
+    pub total_planned_minutes: i64,
+    pub total_tasks: i64,
+    pub days_with_entries: i64,
+}
+

@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { calendarApi } from '@/lib/calendarApi';
-import { timeOffService } from '@backend/services/timeOffService';
 import type {
   CalendarTask,
   CalendarSettings,
@@ -172,14 +171,13 @@ export const useCalendarStore = create<CalendarStoreState>((set, get) => ({
   fetchData: async () => {
     set({ isLoading: true, error: null });
     try {
-      const [tasks, projects, tags, settings] = await Promise.all([
+      const [tasks, projects, tags, settings, members] = await Promise.all([
         calendarApi.listTasks(),
         calendarApi.listProjects(),
         calendarApi.listTags(),
         calendarApi.getSettings(),
+        calendarApi.listMembers(),
       ]);
-
-      const members = timeOffService.listMembers();
 
       set({
         tasks: tasks || [],

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { projectApi } from "@/lib/projectApi";
 
 export interface Project {
     id: string;
@@ -39,8 +40,10 @@ interface ProjectState {
     selectedProjectIds: string[];
     isCreateModalOpen: boolean;
     isRemoveSampleModalOpen: boolean;
+    isLoading: boolean;
 
     // Actions
+    loadFromBackend: () => Promise<void>;
     setSearchQuery: (query: string) => void;
     setStatusFilter: (status: StatusFilter) => void;
     setClientFilter: (client: string) => void;
@@ -149,6 +152,42 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     selectedProjectIds: [],
     isCreateModalOpen: false,
     isRemoveSampleModalOpen: false,
+    isLoading: false,
+
+    loadFromBackend: async () => {
+        set({ isLoading: true });
+        try {
+            const list = await projectApi.listProjects();
+            if (list && list.length > 0) {
+                const mapped: Project[] = list.map((p) => ({
+                    id: p.id,
+                    name: p.name,
+                    color: p.color,
+                    client: p.client,
+                    trackedHours: p.tracked_hours,
+                    budgetHours: p.budget_hours,
+                    budgetAmount: p.budget_amount,
+                    isRecurring: p.is_recurring,
+                    amount: p.amount,
+                    currency: p.currency,
+                    progressPercent: p.progress_percent,
+                    isBudgetExceeded: p.is_budget_exceeded,
+                    access: p.access,
+                    isFavorite: p.is_favorite,
+                    isArchived: p.is_archived,
+                    isBillable: p.is_billable,
+                    createdAt: new Date(p.created_at),
+                }));
+                const hasSample = mapped.some((p) => p.name.includes("[SAMPLE]"));
+                set({ projects: mapped, hasSampleData: hasSample, isLoading: false });
+            } else {
+                set({ isLoading: false });
+            }
+        } catch (e) {
+            console.warn("Could not load projects from backend:", e);
+            set({ isLoading: false });
+        }
+    },
 
     setSearchQuery: (query) => set({ searchQuery: query }),
     setStatusFilter: (statusFilter) => set({ statusFilter }),
@@ -191,6 +230,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
                 p.id === id ? { ...p, isFavorite: !p.isFavorite } : p
             ),
         }));
+        projectApi.toggleFavoriteProject(id).catch(console.error);
     },
 
     openCreateModal: () => set({ isCreateModalOpen: true }),
@@ -204,6 +244,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             hasSampleData: false,
             isRemoveSampleModalOpen: false,
         }));
+        projectApi.removeSampleProjects().catch(console.error);
     },
 
     restoreSampleData: () => {
@@ -214,6 +255,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
                 hasSampleData: true,
             };
         });
+        projectApi.restoreSampleProjects().catch(console.error);
     },
 
     createProject: ({ name, color, client, isPublic, isBillable = true }) => {
@@ -236,6 +278,14 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             projects: [newProject, ...state.projects],
             isCreateModalOpen: false,
         }));
+
+        projectApi.createProject({
+            name,
+            color,
+            client,
+            access: isPublic ? "Public" : "Private",
+            is_billable: isBillable,
+        }).catch(console.error);
     },
 
     deleteProject: (id) => {
@@ -243,6 +293,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             projects: state.projects.filter((p) => p.id !== id),
             selectedProjectIds: state.selectedProjectIds.filter((pId) => pId !== id),
         }));
+        projectApi.deleteProject(id).catch(console.error);
     },
 
     archiveProject: (id) => {
@@ -251,6 +302,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
                 p.id === id ? { ...p, isArchived: true } : p
             ),
         }));
+        projectApi.archiveProject(id).catch(console.error);
     },
 
     restoreProject: (id) => {
@@ -259,5 +311,6 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
                 p.id === id ? { ...p, isArchived: false } : p
             ),
         }));
+        projectApi.restoreProject(id).catch(console.error);
     },
 }));

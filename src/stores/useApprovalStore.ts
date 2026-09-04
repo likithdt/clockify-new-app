@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { approvalApi } from "@/lib/approvalApi";
 
 export interface TimesheetApprovalItem {
     id: string;
@@ -39,11 +40,13 @@ interface ApprovalState {
     categoryFilter: string;
     selectedIds: string[];
     toastMessage: string | null;
+    isLoading: boolean;
 
     timesheetItems: TimesheetApprovalItem[];
     expenseItems: ExpenseApprovalItem[];
 
     // Actions
+    loadFromBackend: () => Promise<void>;
     setActiveTab: (tab: ApprovalTab) => void;
     setStatusTab: (tab: ApprovalStatusTab) => void;
     setSortBy: (sort: SortOption) => void;
@@ -167,9 +170,53 @@ export const useApprovalStore = create<ApprovalState>((set, get) => ({
     categoryFilter: "all",
     selectedIds: [],
     toastMessage: null,
+    isLoading: false,
 
     timesheetItems: initialTimesheets,
     expenseItems: initialExpenses,
+
+    loadFromBackend: async () => {
+        set({ isLoading: true });
+        try {
+            const [tsList, expList] = await Promise.all([
+                approvalApi.listTimesheets(),
+                approvalApi.listExpenses(),
+            ]);
+            if (tsList && expList) {
+                const mappedTs: TimesheetApprovalItem[] = tsList.map((t) => ({
+                    id: t.id,
+                    period: t.period,
+                    periodSortDate: t.period_sort_date,
+                    user: t.user,
+                    teamManager: t.team_manager,
+                    time: t.time,
+                    timeOff: t.time_off,
+                    status: t.status as TimesheetApprovalItem["status"],
+                    submittedAt: t.submitted_at,
+                    approvedAt: t.approved_at,
+                }));
+                const mappedExp: ExpenseApprovalItem[] = expList.map((e) => ({
+                    id: e.id,
+                    period: e.period,
+                    periodSortDate: e.period_sort_date,
+                    user: e.user,
+                    teamManager: e.team_manager,
+                    category: e.category,
+                    amount: e.amount,
+                    currency: e.currency,
+                    status: e.status as ExpenseApprovalItem["status"],
+                    submittedAt: e.submitted_at,
+                    approvedAt: e.approved_at,
+                }));
+                set({ timesheetItems: mappedTs, expenseItems: mappedExp, isLoading: false });
+            } else {
+                set({ isLoading: false });
+            }
+        } catch (e) {
+            console.warn("Could not load approvals from backend:", e);
+            set({ isLoading: false });
+        }
+    },
 
     setActiveTab: (tab) => {
         set({ activeTab: tab, selectedIds: [] });
@@ -233,6 +280,7 @@ export const useApprovalStore = create<ApprovalState>((set, get) => ({
                 selectedIds: [],
                 toastMessage: `${selectedIds.length} timesheet(s) approved.`,
             }));
+            approvalApi.approveTimesheets(selectedIds).catch(console.error);
         } else {
             set((state) => ({
                 expenseItems: state.expenseItems.map((item) =>
@@ -243,14 +291,16 @@ export const useApprovalStore = create<ApprovalState>((set, get) => ({
                 selectedIds: [],
                 toastMessage: `${selectedIds.length} expense(s) approved.`,
             }));
+            approvalApi.approveExpenses(selectedIds).catch(console.error);
         }
     },
 
     approveAll: () => {
         const { activeTab } = get();
         if (activeTab === "timesheet") {
-            const pendingCount = get().timesheetItems.filter((i) => i.status === "pending").length;
-            if (pendingCount === 0) return;
+            const pending = get().timesheetItems.filter((i) => i.status === "pending");
+            if (pending.length === 0) return;
+            const ids = pending.map((p) => p.id);
 
             set((state) => ({
                 timesheetItems: state.timesheetItems.map((item) =>
@@ -259,11 +309,13 @@ export const useApprovalStore = create<ApprovalState>((set, get) => ({
                         : item
                 ),
                 selectedIds: [],
-                toastMessage: `All ${pendingCount} pending timesheet(s) approved.`,
+                toastMessage: `All ${pending.length} pending timesheet(s) approved.`,
             }));
+            approvalApi.approveTimesheets(ids).catch(console.error);
         } else {
-            const pendingCount = get().expenseItems.filter((i) => i.status === "pending").length;
-            if (pendingCount === 0) return;
+            const pending = get().expenseItems.filter((i) => i.status === "pending");
+            if (pending.length === 0) return;
+            const ids = pending.map((p) => p.id);
 
             set((state) => ({
                 expenseItems: state.expenseItems.map((item) =>
@@ -272,8 +324,9 @@ export const useApprovalStore = create<ApprovalState>((set, get) => ({
                         : item
                 ),
                 selectedIds: [],
-                toastMessage: `All ${pendingCount} pending expense(s) approved.`,
+                toastMessage: `All ${pending.length} pending expense(s) approved.`,
             }));
+            approvalApi.approveExpenses(ids).catch(console.error);
         }
     },
 
@@ -289,6 +342,7 @@ export const useApprovalStore = create<ApprovalState>((set, get) => ({
                 selectedIds: [],
                 toastMessage: `${selectedIds.length} timesheet(s) rejected.`,
             }));
+            approvalApi.rejectTimesheets(selectedIds).catch(console.error);
         } else {
             set((state) => ({
                 expenseItems: state.expenseItems.map((item) =>
@@ -297,6 +351,7 @@ export const useApprovalStore = create<ApprovalState>((set, get) => ({
                 selectedIds: [],
                 toastMessage: `${selectedIds.length} expense(s) rejected.`,
             }));
+            approvalApi.rejectExpenses(selectedIds).catch(console.error);
         }
     },
 
@@ -317,5 +372,6 @@ export const useApprovalStore = create<ApprovalState>((set, get) => ({
             selectedIds: [],
             toastMessage: "Sample approval data reset.",
         });
+        approvalApi.resetSampleData().catch(console.error);
     },
 }));

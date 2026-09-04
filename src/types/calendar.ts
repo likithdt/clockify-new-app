@@ -99,3 +99,23 @@ export interface CalendarDaySummary {
   total_planned_minutes: number;
   task_count: number;
 }
+
+export interface CalendarMonthSummary {
+  month: string;
+  total_tracked_minutes: number;
+  total_planned_minutes: number;
+  total_tasks: number;
+  days_with_entries: number;
+}
+
+export interface CreateProjectPayload {
+  name: string;
+  color: string;
+  client_name?: string | null;
+  is_billable?: boolean;
+}
+
+export interface CreateTagPayload {
+  name: string;
+}
+

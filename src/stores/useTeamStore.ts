@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { teamApi } from "@/lib/teamApi";
 
 export interface TeamMember {
     id: string;
@@ -40,6 +41,7 @@ interface TeamState {
         workingDays: boolean;
         dailyWorkCapacity: boolean;
     };
+    isLoading: boolean;
 
     // Modals
     isAddMemberOpen: boolean;
@@ -52,6 +54,7 @@ interface TeamState {
     toastMessage: string | null;
 
     // Actions
+    loadFromBackend: () => Promise<void>;
     setActiveTab: (tab: TeamTab) => void;
     setStatusFilter: (status: "All" | "Active" | "Inactive" | "Invited") => void;
     setBillableRateFilter: (filter: Partial<RateFilter>) => void;
@@ -154,10 +157,38 @@ export const useTeamStore = create<TeamState>((set, get) => ({
         workingDays: false,
         dailyWorkCapacity: false,
     },
+    isLoading: false,
 
     isAddMemberOpen: false,
     editingRate: null,
     toastMessage: null,
+
+    loadFromBackend: async () => {
+        set({ isLoading: true });
+        try {
+            const list = await teamApi.listMembers();
+            if (list && list.length > 0) {
+                const mapped: TeamMember[] = list.map((m) => ({
+                    id: m.id,
+                    name: m.name,
+                    email: m.email,
+                    billableRate: m.billable_rate,
+                    costRate: m.cost_rate,
+                    currency: m.currency,
+                    role: m.role as TeamMember["role"],
+                    group: m.group,
+                    status: m.status as TeamMember["status"],
+                    isCurrentUser: m.is_current_user,
+                }));
+                set({ members: mapped, isLoading: false });
+            } else {
+                set({ isLoading: false });
+            }
+        } catch (e) {
+            console.warn("Could not load team members from backend:", e);
+            set({ isLoading: false });
+        }
+    },
 
     setActiveTab: (tab) => set({ activeTab: tab }),
     setStatusFilter: (status) => set({ statusFilter: status }),
@@ -231,6 +262,8 @@ export const useTeamStore = create<TeamState>((set, get) => ({
             editingRate: null,
             toastMessage: `${type === "billable" ? "Billable" : "Cost"} rate updated successfully.`,
         }));
+        const payload = type === "billable" ? { billable_rate: newRate } : { cost_rate: newRate };
+        teamApi.updateMember(memberId, payload).catch(console.error);
     },
 
     addMembers: (emails) => {
@@ -251,6 +284,8 @@ export const useTeamStore = create<TeamState>((set, get) => ({
             isAddMemberOpen: false,
             toastMessage: `${emails.length} invitation(s) sent successfully.`,
         }));
+
+        teamApi.addMembers({ emails }).catch(console.error);
     },
 
     updateMemberRole: (memberId, role) => {
@@ -260,6 +295,7 @@ export const useTeamStore = create<TeamState>((set, get) => ({
             ),
             toastMessage: `Role updated to ${role}.`,
         }));
+        teamApi.updateMember(memberId, { role }).catch(console.error);
     },
 
     deleteMember: (id) => {
@@ -267,6 +303,7 @@ export const useTeamStore = create<TeamState>((set, get) => ({
             members: state.members.filter((m) => m.id !== id),
             toastMessage: `Team member removed.`,
         }));
+        teamApi.deleteMember(id).catch(console.error);
     },
 
     setToastMessage: (msg) => set({ toastMessage: msg }),
@@ -277,5 +314,6 @@ export const useTeamStore = create<TeamState>((set, get) => ({
             selectedMemberIds: [],
             toastMessage: `Sample team members reset.`,
         });
+        teamApi.resetSampleTeam().catch(console.error);
     },
 }));

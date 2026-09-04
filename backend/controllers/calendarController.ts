@@ -118,6 +118,15 @@ export class CalendarController {
     }
   }
 
+  static deleteProject(id: string) {
+    try {
+      calendarService.deleteProject(id);
+      return { success: true, message: `Project '${id}' deleted successfully` };
+    } catch (err: unknown) {
+      return { success: false, error: (err as Error).message };
+    }
+  }
+
   static listTags() {
     try {
       const data = calendarService.listTags();
@@ -135,4 +144,41 @@ export class CalendarController {
       return { success: false, error: (err as Error).message };
     }
   }
+
+  static deleteTag(id: string) {
+    try {
+      calendarService.deleteTag(id);
+      return { success: true, message: `Tag '${id}' deleted successfully` };
+    } catch (err: unknown) {
+      return { success: false, error: (err as Error).message };
+    }
+  }
+
+  static getMonthSummary(yearMonth: string, memberId?: string) {
+    try {
+      const data = calendarService.getMonthSummary(yearMonth, memberId);
+      return { success: true, data };
+    } catch (err: unknown) {
+      return { success: false, error: (err as Error).message };
+    }
+  }
+
+  static exportCalendarICS(memberId?: string) {
+    try {
+      const data = calendarService.exportCalendarICS(memberId);
+      return { success: true, data };
+    } catch (err: unknown) {
+      return { success: false, error: (err as Error).message };
+    }
+  }
+
+  static listMembers() {
+    try {
+      const data = calendarService.listMembers();
+      return { success: true, data };
+    } catch (err: unknown) {
+      return { success: false, error: (err as Error).message };
+    }
+  }
 }
+

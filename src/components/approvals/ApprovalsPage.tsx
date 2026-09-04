@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
     ChevronDown,
     Check,
@@ -39,7 +39,12 @@ export function ApprovalsPage() {
         remindToApprove,
         setToastMessage,
         resetSampleData,
+        loadFromBackend,
     } = useApprovalStore();
+
+    useEffect(() => {
+        loadFromBackend();
+    }, [loadFromBackend]);
 
     // Dropdown toggles
     const [isSortOpen, setIsSortOpen] = useState(false);

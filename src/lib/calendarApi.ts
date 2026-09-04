@@ -148,7 +148,31 @@ export const calendarApi = {
   },
 
   createProject: async (name: string, color: string, clientName?: string, isBillable = true): Promise<ProjectItem> => {
+    if (isTauri) {
+      try {
+        return await invoke<ProjectItem>('create_calendar_project', {
+          name,
+          color,
+          clientName: clientName || null,
+          isBillable,
+        });
+      } catch (e) {
+        console.warn('Tauri invoke create_calendar_project failed, using fallback:', e);
+      }
+    }
     return calendarService.createProject(name, color, clientName, isBillable);
+  },
+
+  deleteProject: async (id: string): Promise<void> => {
+    if (isTauri) {
+      try {
+        await invoke('delete_calendar_project', { id });
+        return;
+      } catch (e) {
+        console.warn('Tauri invoke delete_calendar_project failed, using fallback:', e);
+      }
+    }
+    calendarService.deleteProject(id);
   },
 
   listTags: async (): Promise<TagItem[]> => {
@@ -163,6 +187,64 @@ export const calendarApi = {
   },
 
   createTag: async (name: string): Promise<TagItem> => {
+    if (isTauri) {
+      try {
+        return await invoke<TagItem>('create_calendar_tag', { name });
+      } catch (e) {
+        console.warn('Tauri invoke create_calendar_tag failed, using fallback:', e);
+      }
+    }
     return calendarService.createTag(name);
   },
+
+  deleteTag: async (id: string): Promise<void> => {
+    if (isTauri) {
+      try {
+        await invoke('delete_calendar_tag', { id });
+        return;
+      } catch (e) {
+        console.warn('Tauri invoke delete_calendar_tag failed, using fallback:', e);
+      }
+    }
+    calendarService.deleteTag(id);
+  },
+
+  getMonthSummary: async (yearMonth: string, memberId?: string) => {
+    if (isTauri) {
+      try {
+        return await invoke('get_calendar_month_summary', {
+          yearMonth,
+          memberId: memberId || null,
+        });
+      } catch (e) {
+        console.warn('Tauri invoke get_calendar_month_summary failed, using fallback:', e);
+      }
+    }
+    return calendarService.getMonthSummary(yearMonth, memberId);
+  },
+
+  exportCalendarICS: async (memberId?: string): Promise<string> => {
+    if (isTauri) {
+      try {
+        return await invoke<string>('export_calendar_ics', {
+          memberId: memberId || null,
+        });
+      } catch (e) {
+        console.warn('Tauri invoke export_calendar_ics failed, using fallback:', e);
+      }
+    }
+    return calendarService.exportCalendarICS(memberId);
+  },
+
+  listMembers: async () => {
+    if (isTauri) {
+      try {
+        return await invoke<any[]>('list_team_members');
+      } catch (e) {
+        console.warn('Tauri invoke list_team_members failed, using fallback:', e);
+      }
+    }
+    return calendarService.listMembers();
+  },
 };
+

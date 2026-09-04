@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { ProjectsFilterBar } from "./ProjectsFilterBar";
 import { ProjectsTable } from "./ProjectsTable";
@@ -5,7 +6,11 @@ import { CreateProjectModal } from "./CreateProjectModal";
 import { ProjectRemoveSampleModal } from "./ProjectRemoveSampleModal";
 
 export function ProjectsPage() {
-    const { hasSampleData, setRemoveSampleModalOpen, openCreateModal } = useProjectStore();
+    const { hasSampleData, setRemoveSampleModalOpen, openCreateModal, loadFromBackend } = useProjectStore();
+
+    useEffect(() => {
+        loadFromBackend();
+    }, [loadFromBackend]);
 
     return (
         <div className="flex-1 flex flex-col overflow-y-auto min-h-0 bg-[#f5f6f8] select-none p-8">

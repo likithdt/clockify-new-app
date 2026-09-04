@@ -13,6 +13,8 @@ import {
     FileText,
 } from "lucide-react";
 
+import { useReportStore } from "@/stores/useReportStore";
+
 export type ReportTab = "summary" | "detailed" | "weekly" | "shared";
 
 export function ReportsPage() {
@@ -20,6 +22,14 @@ export function ReportsPage() {
     const [isExportOpen, setIsExportOpen] = useState(false);
     const [isReportTypeOpen, setIsReportTypeOpen] = useState(false);
     const exportRef = useRef<HTMLDivElement>(null);
+
+    const { loadSummary, loadDetailed, loadWeekly, exportReport } = useReportStore();
+
+    useEffect(() => {
+        if (activeTab === "summary") loadSummary();
+        else if (activeTab === "detailed") loadDetailed();
+        else if (activeTab === "weekly") loadWeekly();
+    }, [activeTab, loadSummary, loadDetailed, loadWeekly]);
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -31,9 +41,14 @@ export function ReportsPage() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const handleExport = (format: string) => {
+    const handleExport = async (format: string) => {
         setIsExportOpen(false);
-        alert(`Exporting ${activeTab.toUpperCase()} report as ${format}...`);
+        try {
+            await exportReport(format as "csv" | "pdf" | "excel");
+            alert(`Exported ${activeTab.toUpperCase()} report as ${format}`);
+        } catch (e) {
+            console.error("Export error:", e);
+        }
     };
 
     return (

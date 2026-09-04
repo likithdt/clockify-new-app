@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useKioskStore } from "@/stores/useKioskStore";
 import { KiosksWelcomeCards } from "./KiosksWelcomeCards";
 import { CreateKioskModal } from "./CreateKioskModal";
@@ -6,8 +7,12 @@ import { KioskAttendanceTerminal } from "./KioskAttendanceTerminal";
 import { Plus } from "lucide-react";
 
 export function KiosksPage() {
-    const { kiosks, isCreateModalOpen, activeTerminalKioskId, openCreateModal } =
+    const { kiosks, isCreateModalOpen, activeTerminalKioskId, openCreateModal, loadFromBackend } =
         useKioskStore();
+
+    useEffect(() => {
+        loadFromBackend();
+    }, [loadFromBackend]);
 
     // If viewing the full terminal attendance screen
     if (activeTerminalKioskId) {

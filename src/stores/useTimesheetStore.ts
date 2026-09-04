@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { timeEntryApi } from "@/lib/timeEntryApi";
 
 export interface TimesheetCell {
     seconds: number; // Duration in seconds
@@ -181,6 +182,22 @@ export const useTimesheetStore = create<TimesheetState>((set, get) => ({
                     : r
             ),
         }));
+
+        const row = get().rows.find((r) => r.id === rowId);
+        if (row && seconds > 0) {
+            timeEntryApi.createEntry({
+                description: row.description || "Timesheet entry",
+                project_id: row.projectId || undefined,
+                project_name: row.projectName || "No Project",
+                project_color: row.projectColor || "#94a3b8",
+                client: row.client || undefined,
+                task_id: row.taskId || undefined,
+                task_name: row.taskName || undefined,
+                is_billable: row.isBillable,
+                start_time: `${dateStr}T09:00:00.000Z`,
+                duration_seconds: seconds,
+            }).catch(console.error);
+        }
     },
 
     copyLastWeek: () => {

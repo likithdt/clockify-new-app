@@ -13,6 +13,8 @@ import { ProjectsPage } from "@/components/projects/ProjectsPage";
 import { AutoTrackerPage } from "@/components/autotracker/AutoTrackerPage";
 import { SchedulePage } from "@/components/schedule/SchedulePage";
 import { TimesheetPage } from "@/components/timesheet/TimesheetPage";
+import { CalendarPage } from "@/components/calendar/CalendarPage";
+import { TimeOffPage } from "@/components/timeoff/TimeOffPage";
 
 export default function App() {
     // Default to "timesheet" matching the Timesheet feature request
@@ -42,6 +44,12 @@ export default function App() {
                     {activeRoute === "timesheet" ? (
                         /* Timesheet feature matching TimeSheet.png */
                         <TimesheetPage />
+                    ) : activeRoute === "calendar" ? (
+                        /* Calendar feature matching Calendar.png */
+                        <CalendarPage />
+                    ) : activeRoute === "time-off" ? (
+                        /* Time Off feature matching TimeOff.png */
+                        <TimeOffPage />
                     ) : activeRoute === "schedule" ? (
                         /* Schedule feature matching Schedule.png */
                         <SchedulePage />
@@ -57,8 +65,8 @@ export default function App() {
                     ) : activeRoute === "invoices" ? (
                         /* Invoices feature matching Invoices.png & Creation of Invoice.png */
                         <InvoicesPage />
-                    ) : activeRoute === "reports" ? (
-                        /* Reports feature matching Reports.png, Reports (2).png, and Reports (3).png */
+                    ) : activeRoute === "reports" || activeRoute === "dashboard" ? (
+                        /* Reports and Dashboard feature matching Reports.png, Reports (2).png, and Reports (3).png */
                         <ReportsPage />
                     ) : activeRoute === "kiosks" ? (
                         /* Kiosks feature matching Kiosks.png & Creation of Kiosk.png */
@@ -80,10 +88,10 @@ export default function App() {
                         <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
                             <div className="max-w-md bg-white p-8 rounded-xl border border-[#e2e8f0] shadow-sm">
                                 <h3 className="text-base font-bold text-[#1e293b] uppercase tracking-wide mb-2">
-                                    {activeRoute.replace("-", " ")}
+                                    {String(activeRoute).replace("-", " ")}
                                 </h3>
                                 <p className="text-xs text-[#64748b] mb-4">
-                                    View and manage your {activeRoute.replace("-", " ")} settings and reports.
+                                    View and manage your {String(activeRoute).replace("-", " ")} settings and reports.
                                 </p>
                                 <button
                                     onClick={() => setActiveRoute("activity")}

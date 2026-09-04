@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
     ChevronDown,
     Search,
@@ -42,7 +42,12 @@ export function TeamPage() {
         deleteMember,
         setToastMessage,
         resetSampleTeam,
+        loadFromBackend,
     } = useTeamStore();
+
+    useEffect(() => {
+        loadFromBackend();
+    }, [loadFromBackend]);
 
     // Dropdown open states
     const [isFilterOpen, setIsFilterOpen] = useState(false);

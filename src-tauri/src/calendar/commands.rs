@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use crate::calendar::{
     models::{
-        CalendarDaySummary, CalendarFilter, CalendarSettings, CalendarTask,
+        CalendarDaySummary, CalendarFilter, CalendarMonthSummary, CalendarSettings, CalendarTask,
         CreateCalendarTaskPayload, MoveCalendarTaskPayload, ProjectItem, TagItem,
         UpdateCalendarTaskPayload,
     },
@@ -373,3 +373,139 @@ pub fn list_calendar_tags(state: State<'_, CalendarState>) -> Vec<TagItem> {
     let store = state.0.lock().unwrap();
     store.tags.clone()
 }
+
+#[tauri::command]
+pub fn create_calendar_project(
+    state: State<'_, CalendarState>,
+    name: String,
+    color: String,
+    client_name: Option<String>,
+    is_billable: Option<bool>,
+) -> ProjectItem {
+    let mut store = state.0.lock().unwrap();
+    let id = format!("proj_{}", store.projects.len() + 1);
+    let proj = ProjectItem {
+        id,
+        name,
+        client_name,
+        color,
+        is_billable: is_billable.unwrap_or(true),
+    };
+    store.projects.push(proj.clone());
+    proj
+}
+
+#[tauri::command]
+pub fn delete_calendar_project(
+    state: State<'_, CalendarState>,
+    id: String,
+) -> Result<(), String> {
+    let mut store = state.0.lock().unwrap();
+    let initial_len = store.projects.len();
+    store.projects.retain(|p| p.id != id);
+    if store.projects.len() == initial_len {
+        return Err(format!("Project with id '{}' not found", id));
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn create_calendar_tag(
+    state: State<'_, CalendarState>,
+    name: String,
+) -> TagItem {
+    let mut store = state.0.lock().unwrap();
+    if let Some(existing) = store.tags.iter().find(|t| t.name.eq_ignore_ascii_case(&name)) {
+        return existing.clone();
+    }
+    let id = format!("tag_{}", store.tags.len() + 1);
+    let tag = TagItem { id, name };
+    store.tags.push(tag.clone());
+    tag
+}
+
+#[tauri::command]
+pub fn delete_calendar_tag(
+    state: State<'_, CalendarState>,
+    id: String,
+) -> Result<(), String> {
+    let mut store = state.0.lock().unwrap();
+    let initial_len = store.tags.len();
+    store.tags.retain(|t| t.id != id);
+    if store.tags.len() == initial_len {
+        return Err(format!("Tag with id '{}' not found", id));
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_calendar_month_summary(
+    state: State<'_, CalendarState>,
+    year_month: String,
+    member_id: Option<String>,
+) -> CalendarMonthSummary {
+    let store = state.0.lock().unwrap();
+    let mut total_tracked = 0i64;
+    let mut total_planned = 0i64;
+    let mut total_tasks = 0i64;
+    let mut days_set = std::collections::HashSet::new();
+
+    for t in &store.tasks {
+        if t.date.starts_with(&year_month) {
+            if let Some(ref mid) = member_id {
+                if !mid.is_empty() && &t.member_id != mid {
+                    continue;
+                }
+            }
+            total_tasks += 1;
+            days_set.insert(t.date.clone());
+            if t.entry_type == "entry" {
+                total_tracked += t.duration_minutes;
+            } else {
+                total_planned += t.duration_minutes;
+            }
+        }
+    }
+
+    CalendarMonthSummary {
+        month: year_month,
+        total_tracked_minutes: total_tracked,
+        total_planned_minutes: total_planned,
+        total_tasks,
+        days_with_entries: days_set.len() as i64,
+    }
+}
+
+#[tauri::command]
+pub fn export_calendar_ics(
+    state: State<'_, CalendarState>,
+    member_id: Option<String>,
+) -> String {
+    let store = state.0.lock().unwrap();
+    let mut ics = String::from("BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Clockify Desktop//Calendar//EN\r\nCALSCALE:GREGORIAN\r\n");
+
+    for t in &store.tasks {
+        if let Some(ref mid) = member_id {
+            if !mid.is_empty() && &t.member_id != mid {
+                continue;
+            }
+        }
+
+        let date_clean = t.date.replace('-', "");
+        let start_clean = t.start_time.replace(':', "");
+        let end_clean = t.end_time.replace(':', "");
+
+        ics.push_str("BEGIN:VEVENT\r\n");
+        ics.push_str(&format!("UID:{}\r\n", t.id));
+        ics.push_str(&format!("DTSTART:{}T{}00Z\r\n", date_clean, start_clean));
+        ics.push_str(&format!("DTEND:{}T{}00Z\r\n", date_clean, end_clean));
+        ics.push_str(&format!("SUMMARY:{}\r\n", t.title));
+        ics.push_str(&format!("DESCRIPTION:Project: {} | Billable: {}\r\n", t.project_name, t.is_billable));
+        ics.push_str("STATUS:CONFIRMED\r\n");
+        ics.push_str("END:VEVENT\r\n");
+    }
+
+    ics.push_str("END:VCALENDAR\r\n");
+    ics
+}
+

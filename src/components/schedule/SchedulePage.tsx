@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
     useScheduleStore,
     ScheduleAssignment,
@@ -88,8 +88,13 @@ export function SchedulePage() {
         openRemoveSampleModal,
         restoreSampleData,
         deleteAssignment,
+        loadFromBackend,
         assignments,
     } = useScheduleStore();
+
+    useEffect(() => {
+        loadFromBackend();
+    }, [loadFromBackend]);
 
     const { members } = useTeamStore();
 

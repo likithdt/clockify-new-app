@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { autoTrackerApi } from "@/lib/autoTrackerApi";
 import { useTimerStore } from "./useTimerStore";
 
 export interface DetectedActivity {
@@ -21,8 +22,10 @@ interface AutoTrackerState {
     activities: DetectedActivity[];
     searchQuery: string;
     filterApp: string;
+    isLoading: boolean;
 
     // Actions
+    loadFromBackend: () => Promise<void>;
     toggleRecording: () => void;
     acceptAndLog: (id: string) => void;
     acceptAll: () => void;
@@ -36,6 +39,7 @@ export const useAutoTrackerStore = create<AutoTrackerState>((set, get) => ({
     isRecording: true,
     searchQuery: "",
     filterApp: "All",
+    isLoading: false,
     activities: [
         {
             id: "act-1",
@@ -95,70 +99,117 @@ export const useAutoTrackerStore = create<AutoTrackerState>((set, get) => ({
         },
     ],
 
-    toggleRecording: () => set((state) => ({ isRecording: !state.isRecording })),
+    loadFromBackend: async () => {
+        set({ isLoading: true });
+        try {
+            const list = await autoTrackerApi.listActivities();
+            if (list && list.length > 0) {
+                const mapped: DetectedActivity[] = list.map((a) => ({
+                    id: a.id,
+                    app: a.app,
+                    windowTitle: a.window_title,
+                    iconType: a.icon_type,
+                    suggestedProject: a.suggested_project,
+                    projectColor: a.project_color,
+                    startTime: a.start_time,
+                    endTime: a.end_time,
+                    durationMinutes: a.duration_minutes,
+                    durationSeconds: a.duration_seconds,
+                    isLogged: a.is_logged,
+                    date: a.date,
+                }));
+                set({ activities: mapped });
+            }
+            const status = await autoTrackerApi.getStatus();
+            if (status) {
+                set({ isRecording: status.is_recording });
+            }
+            set({ isLoading: false });
+        } catch (e) {
+            console.warn("Could not load autotracker from backend:", e);
+            set({ isLoading: false });
+        }
+    },
+
+    toggleRecording: () => {
+        set((state) => ({ isRecording: !state.isRecording }));
+        autoTrackerApi.toggleRecording().catch(console.error);
+    },
 
     acceptAndLog: (id: string) => {
         const { activities } = get();
         const activity = activities.find((a) => a.id === id);
         if (!activity || activity.isLogged) return;
 
-        // Log to useTimerStore
-        const addCustomEntry = useTimerStore.getState().addCustomEntry;
-        addCustomEntry({
-            id: crypto.randomUUID(),
-            description: `${activity.app}: ${activity.windowTitle}`,
+        // Push directly to live Time Tracker store
+        useTimerStore.getState().addCustomEntry({
+            id: `entry-${Date.now()}`,
+            description: activity.windowTitle,
             projectName: activity.suggestedProject,
             projectColor: activity.projectColor,
             isBillable: true,
-            startTime: new Date(Date.now() - activity.durationSeconds * 1000),
-            endTime: new Date(),
+            startTime: new Date(),
             durationSeconds: activity.durationSeconds,
         });
 
-        // Mark as logged
+        // Mark local and backend
         set((state) => ({
             activities: state.activities.map((a) =>
                 a.id === id ? { ...a, isLogged: true } : a
             ),
         }));
+
+        autoTrackerApi.logActivity({
+            activity_id: id,
+            project_name: activity.suggestedProject,
+            project_color: activity.projectColor,
+            is_billable: true,
+        }).catch(console.error);
     },
 
     acceptAll: () => {
         const { activities } = get();
-        const unlogged = activities.filter((a) => !a.isLogged);
-        if (unlogged.length === 0) return;
-
-        const addCustomEntry = useTimerStore.getState().addCustomEntry;
-        unlogged.forEach((activity) => {
-            addCustomEntry({
-                id: crypto.randomUUID(),
-                description: `${activity.app}: ${activity.windowTitle}`,
-                projectName: activity.suggestedProject,
-                projectColor: activity.projectColor,
-                isBillable: true,
-                startTime: new Date(Date.now() - activity.durationSeconds * 1000),
-                endTime: new Date(),
-                durationSeconds: activity.durationSeconds,
-            });
+        activities.forEach((act) => {
+            if (!act.isLogged) {
+                useTimerStore.getState().addCustomEntry({
+                    id: `entry-${Date.now()}-${act.id}`,
+                    description: act.windowTitle,
+                    projectName: act.suggestedProject,
+                    projectColor: act.projectColor,
+                    isBillable: true,
+                    startTime: new Date(),
+                    durationSeconds: act.durationSeconds,
+                });
+            }
         });
 
         set((state) => ({
             activities: state.activities.map((a) => ({ ...a, isLogged: true })),
         }));
+
+        autoTrackerApi.logAllActivities().catch(console.error);
     },
 
     discardActivity: (id: string) => {
         set((state) => ({
             activities: state.activities.filter((a) => a.id !== id),
         }));
+        autoTrackerApi.discardActivity(id).catch(console.error);
     },
 
     updateProject: (id: string, projectName: string, projectColor: string) => {
         set((state) => ({
             activities: state.activities.map((a) =>
-                a.id === id ? { ...a, suggestedProject: projectName, projectColor } : a
+                a.id === id
+                    ? { ...a, suggestedProject: projectName, projectColor }
+                    : a
             ),
         }));
+        autoTrackerApi.updateSuggestedProject({
+            activity_id: id,
+            suggested_project: projectName,
+            project_color: projectColor,
+        }).catch(console.error);
     },
 
     setSearchQuery: (searchQuery: string) => set({ searchQuery }),

@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAutoTrackerStore } from "@/stores/useAutoTrackerStore";
 import { AutoTrackerHeader } from "./AutoTrackerHeader";
 import { DetectedActivityCard } from "./DetectedActivityCard";
 import { ShieldCheck, Search, Filter } from "lucide-react";
 
 export function AutoTrackerPage() {
-    const { activities, isRecording } = useAutoTrackerStore();
+    const { activities, isRecording, loadFromBackend } = useAutoTrackerStore();
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedApp, setSelectedApp] = useState("All");
+
+    useEffect(() => {
+        loadFromBackend();
+    }, [loadFromBackend]);
 
     const apps = ["All", ...Array.from(new Set(activities.map((a) => a.app)))];
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useInvoiceStore } from "@/stores/useInvoiceStore";
 import { CreateInvoiceModal } from "./CreateInvoiceModal";
 import { RemoveSampleDataModal } from "./RemoveSampleDataModal";
@@ -26,7 +26,12 @@ export function InvoicesPage() {
         setFilterClient,
         setFilterStatus,
         setSearchQuery,
+        loadFromBackend,
     } = useInvoiceStore();
+
+    useEffect(() => {
+        loadFromBackend();
+    }, [loadFromBackend]);
 
     const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false);
     const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);

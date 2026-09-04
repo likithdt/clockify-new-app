@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { TopNavbar } from "@/components/common/TopNavbar";
 import { Sidebar, type PageRoute } from "@/components/common/Sidebar";
-import { TrackerBar } from "@/components/tracker/TrackerBar";
+import { InvoicesPage } from "@/components/invoices/InvoicesPage";
+import { ExpensesPage } from "@/components/expenses/ExpensesPage";
+import { ApprovalsPage } from "@/components/approvals/ApprovalsPage";
+import { TeamPage } from "@/components/team/TeamPage";
+import { ReportsPage } from "@/components/reports/ReportsPage";
+import { KiosksPage } from "@/components/kiosks/KiosksPage";
+import { TimeTrackerPage } from "@/components/tracker/TimeTrackerPage";
 import { ActivityPage } from "@/components/activity/ActivityPage";
 import { ProjectsPage } from "@/components/projects/ProjectsPage";
 import { AutoTrackerPage } from "@/components/autotracker/AutoTrackerPage";
@@ -10,8 +16,8 @@ import { format } from "date-fns";
 import { MapPin } from "lucide-react";
 
 export default function App() {
-    // Default to "auto-tracker" as requested
-    const [activeRoute, setActiveRoute] = useState<PageRoute>("auto-tracker");
+    // Default to "team" matching the Rates / Team feature
+    const [activeRoute, setActiveRoute] = useState<PageRoute>("team");
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
     const { entries } = useTimerStore();
@@ -56,7 +62,28 @@ export default function App() {
 
                 {/* Main View Area */}
                 <main className="flex-1 flex flex-col overflow-hidden min-w-0 bg-[#f5f6f8]">
-                    {activeRoute === "auto-tracker" ? (
+                    {activeRoute === "team" || activeRoute === "rates" ? (
+                        /* Rates & Team feature matching Team.png, Team (Billable rate).png, Team(CostRate).png, etc. */
+                        <TeamPage />
+                    ) : activeRoute === "approvals" ? (
+                        /* Approvals feature matching Approvals Timesheet.png & Approvals Expenses.png */
+                        <ApprovalsPage />
+                    ) : activeRoute === "expenses" ? (
+                        /* Expenses feature matching Expenses.png & Creation of Expenses.png */
+                        <ExpensesPage />
+                    ) : activeRoute === "invoices" ? (
+                        /* Invoices feature matching Invoices.png & Creation of Invoice.png */
+                        <InvoicesPage />
+                    ) : activeRoute === "reports" ? (
+                        /* Reports feature matching Reports.png, Reports (2).png, and Reports (3).png */
+                        <ReportsPage />
+                    ) : activeRoute === "kiosks" ? (
+                        /* Kiosks feature matching Kiosks.png & Creation of Kiosk.png */
+                        <KiosksPage />
+                    ) : activeRoute === "time-tracker" ? (
+                        /* Timer / Time Tracker feature matching TimeTracker.png */
+                        <TimeTrackerPage />
+                    ) : activeRoute === "auto-tracker" ? (
                         /* Auto Tracker feature: AI autonomous background activity tracking */
                         <AutoTrackerPage />
                     ) : activeRoute === "projects" ? (

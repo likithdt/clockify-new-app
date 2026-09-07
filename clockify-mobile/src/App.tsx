@@ -1,0 +1,109 @@
+import { useState } from "react";
+import { TopNavbar } from "@/components/common/TopNavbar";
+import { Sidebar, type PageRoute } from "@/components/common/Sidebar";
+import { InvoicesPage } from "@/components/invoices/InvoicesPage";
+import { ExpensesPage } from "@/components/expenses/ExpensesPage";
+import { ApprovalsPage } from "@/components/approvals/ApprovalsPage";
+import { TeamPage } from "@/components/team/TeamPage";
+import { ReportsPage } from "@/components/reports/ReportsPage";
+import { KiosksPage } from "@/components/kiosks/KiosksPage";
+import { TimeTrackerPage } from "@/components/tracker/TimeTrackerPage";
+import { ActivityPage } from "@/components/activity/ActivityPage";
+import { ProjectsPage } from "@/components/projects/ProjectsPage";
+import { AutoTrackerPage } from "@/components/autotracker/AutoTrackerPage";
+import { SchedulePage } from "@/components/schedule/SchedulePage";
+import { TimesheetPage } from "@/components/timesheet/TimesheetPage";
+import { CalendarPage } from "@/components/calendar/CalendarPage";
+import { TimeOffPage } from "@/components/timeoff/TimeOffPage";
+
+export default function App() {
+    // Default to "timesheet" matching the Timesheet feature request
+    const [activeRoute, setActiveRoute] = useState<PageRoute>("timesheet");
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+    return (
+        <div className="flex flex-col h-screen w-screen bg-[#f5f6f8] overflow-hidden select-none font-sans text-[#1e293b]">
+            {/* Top Navigation Bar with Trial Banner matching Clockify */}
+            <TopNavbar
+                workspaceName="GOPALAN COLLEGE OF ENGINEERING..."
+                userInitials="LD"
+            />
+
+            {/* Body Area: Sidebar + Main Content */}
+            <div className="flex flex-1 overflow-hidden relative">
+                {/* Left Sidebar */}
+                <Sidebar
+                    activeRoute={activeRoute}
+                    onRouteChange={setActiveRoute}
+                    collapsed={sidebarCollapsed}
+                    onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+                />
+
+                {/* Main View Area */}
+                <main className="flex-1 flex flex-col overflow-hidden min-w-0 bg-[#f5f6f8]">
+                    {activeRoute === "timesheet" ? (
+                        /* Timesheet feature matching TimeSheet.png */
+                        <TimesheetPage />
+                    ) : activeRoute === "calendar" ? (
+                        /* Calendar feature matching Calendar.png */
+                        <CalendarPage />
+                    ) : activeRoute === "time-off" ? (
+                        /* Time Off feature matching TimeOff.png */
+                        <TimeOffPage />
+                    ) : activeRoute === "schedule" ? (
+                        /* Schedule feature matching Schedule.png */
+                        <SchedulePage />
+                    ) : activeRoute === "team" || activeRoute === "rates" ? (
+                        /* Rates & Team feature matching Team.png, Team (Billable rate).png, Team(CostRate).png, etc. */
+                        <TeamPage />
+                    ) : activeRoute === "approvals" ? (
+                        /* Approvals feature matching Approvals Timesheet.png & Approvals Expenses.png */
+                        <ApprovalsPage />
+                    ) : activeRoute === "expenses" ? (
+                        /* Expenses feature matching Expenses.png & Creation of Expenses.png */
+                        <ExpensesPage />
+                    ) : activeRoute === "invoices" ? (
+                        /* Invoices feature matching Invoices.png & Creation of Invoice.png */
+                        <InvoicesPage />
+                    ) : activeRoute === "reports" || activeRoute === "dashboard" ? (
+                        /* Reports and Dashboard feature matching Reports.png, Reports (2).png, and Reports (3).png */
+                        <ReportsPage />
+                    ) : activeRoute === "kiosks" ? (
+                        /* Kiosks feature matching Kiosks.png & Creation of Kiosk.png */
+                        <KiosksPage />
+                    ) : activeRoute === "time-tracker" ? (
+                        /* Timer / Time Tracker feature matching TimeTracker.png */
+                        <TimeTrackerPage />
+                    ) : activeRoute === "auto-tracker" ? (
+                        /* Auto Tracker feature: AI autonomous background activity tracking */
+                        <AutoTrackerPage />
+                    ) : activeRoute === "projects" ? (
+                        /* Projects feature: Project directory, budgets, and creation modal */
+                        <ProjectsPage />
+                    ) : activeRoute === "activity" ? (
+                        /* Activity feature: Activity Monitoring, Screenshots, and Locations */
+                        <ActivityPage />
+                    ) : (
+                        /* Generic view placeholder for other sidebar links */
+                        <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
+                            <div className="max-w-md bg-white p-8 rounded-xl border border-[#e2e8f0] shadow-sm">
+                                <h3 className="text-base font-bold text-[#1e293b] uppercase tracking-wide mb-2">
+                                    {String(activeRoute).replace("-", " ")}
+                                </h3>
+                                <p className="text-xs text-[#64748b] mb-4">
+                                    View and manage your {String(activeRoute).replace("-", " ")} settings and reports.
+                                </p>
+                                <button
+                                    onClick={() => setActiveRoute("activity")}
+                                    className="px-4 py-2 bg-[#03a9f4] hover:bg-[#0288d1] text-white rounded text-xs font-semibold transition"
+                                >
+                                    Go to Activity (Screenshots &amp; Locations)
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </main>
+            </div>
+        </div>
+    );
+}

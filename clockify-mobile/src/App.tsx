@@ -680,7 +680,7 @@ export default function App() {
             timerStatus={timerStatus}
             onStartTimer={handleStartTimer}
             onStopTimer={handleStopTimer}
-            onOpenNewEntryModal={(durationSec) => {
+            onOpenNewEntryModal={(durationSec?: number) => {
               setEditingEntry(null);
               setManualDurationSeconds(durationSec);
               setShowTimeEntryModal(true);
@@ -739,7 +739,7 @@ export default function App() {
             tags={tags}
             searchQuery={searchQuery}
             onOpenTagModal={() => setShowTagModal(true)}
-            onDeleteTag={(id) => setTags(tags.filter((t) => t.id !== id))}
+            onDeleteTag={(id: string) => setTags(tags.filter((t) => t.id !== id))}
           />
         )}
 

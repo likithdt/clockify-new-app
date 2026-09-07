@@ -1,4 +1,4 @@
-﻿# Clockify Application Suite
+# Clockify Application Suite
 
 A full-featured clone and reimagination of **Clockify**, featuring both a cross-platform **Desktop application** (powered by Tauri v2 and React) and a responsive **Mobile application**, alongside reference UI designs.
 
@@ -23,7 +23,17 @@ clockify-new-app/
 │   ├── package.json               # Mobile dependencies & scripts
 │   └── vite.config.ts             # Vite configuration
 │
-├── clockify-ref-images-desktop/   # UI/UX reference screenshots and design mockups
+├── packages/
+│   └── database/                  # Production PostgreSQL schema, Drizzle ORM & migrations
+│       ├── migrations/            # Raw SQL migration scripts (0000_init.sql)
+│       ├── schema.ts              # Drizzle ORM schema with strict TypeScript types
+│       ├── drizzle.config.ts      # Drizzle Kit configuration
+│       ├── seed.ts                # Production seed script (workspaces, users, GPS entries)
+│       └── package.json           # Database package configuration
+│
+├── clockify-ref-images-desktop/   # UI/UX reference screenshots and design mockups of the Desktop version
+├── clockify-ref-images-mobile/    # UI/UX reference screenshots of the Mobile version
+├── pnpm-workspace.yaml            # Monorepo workspace configuration
 ├── .gitignore                     # Git ignore rules for node_modules, target, logs
 └── README.md                      # Project documentation
 ```
@@ -111,15 +121,52 @@ pnpm dev # or npm run dev
 
 ---
 
+## 🗄️ Database Layer (`@clockify/database`)
+
+An enterprise-grade, multi-tenant PostgreSQL database layer built with **Drizzle ORM**, supporting offline-first synchronization across Desktop and Mobile clients.
+
+### ✨ Features & Architecture
+- **Multi-Tenancy & RBAC**: Strict workspace isolation with `workspaces`, `users`, and `workspace_members` (`OWNER`, `ADMIN`, `PROJECT_MANAGER`, `MEMBER`).
+- **Entity Hierarchy**: Full support for `clients`, `projects` (custom color hexes, billable defaults), `tasks`, and `tags`.
+- **Unified Time Entries**: Accurate UTC timestamps (`start_time`, `end_time`), `duration_seconds`, and historical rate snapshotting (`hourly_rate_applied`).
+- **Geolocation & Mobile Telemetry**: Built-in GPS coordinates (`latitude`, `longitude`), accuracy radius (`location_accuracy`), and reverse-geocoded physical address (`location_address`).
+- **Offline-First Synchronization**: Last-Write-Wins timestamps (`client_created_at`, `client_updated_at`), hardware audit metadata (`created_platform`, `device_id`, `device_name`, `client_version`), and monotonic `server_updated_at` for delta-sync (`GET /sync?since=timestamp`). Soft-delete (`deleted_at`) ensures deletions propagate to offline clients.
+- **High-Performance Indexes**:
+  - `(workspace_id, user_id, start_time)` for fast daily/weekly timesheet feeds.
+  - `(workspace_id, server_updated_at)` for delta-sync queries.
+  - `(project_id, is_billable)` for real-time reporting rollups.
+
+### 🚀 Running Migrations & Seeding
+```bash
+# Navigate to the database package
+cd packages/database
+
+# Install dependencies
+pnpm install
+
+# Run raw SQL migration
+psql -d clockify -f migrations/0000_init.sql
+# or with Drizzle Kit
+pnpm migrate
+
+# Seed sample workspace, users, projects, and desktop/mobile GPS time entries
+pnpm seed
+```
+
+---
+
 ## 🖼️ Reference Designs
 
-The `clockify-ref-images-desktop/` folder contains high-fidelity visual references used during development:
-- Activity monitoring & screenshots
-- Calendar (Day & Week views)
-- Invoices, Expenses, & Kiosks
-- Projects & Reports
-- Team roles, rates, and permissions
-- Time Tracker & Timesheet
+Visual references used during development:
+- **Desktop** (`clockify-ref-images-desktop/`):
+  - Activity monitoring, location maps & screenshot tracking
+  - Calendar (Day & Week views), Timesheets & Time Tracker
+  - Invoices, Expenses, Kiosks, Projects & Reports
+  - Team roles, billable & cost rates, permissions
+- **Mobile** (`clockify-ref-images-mobile/`):
+  - Mobile time entry screens, Timer & Pomodoro
+  - Client, project, tag & team management sheets
+  - Reports, workspace settings, profile & bottom sheet dialogs
 
 ---
 

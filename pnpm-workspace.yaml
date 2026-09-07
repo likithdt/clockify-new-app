@@ -1,0 +1,4 @@
+﻿packages:
+  - 'packages/*'
+  - 'clockify-desktop'
+  - 'clockify-mobile'

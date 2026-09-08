@@ -157,3 +157,183 @@ export interface UpdateTimeEntryPayload {
   endTime?: string;
   durationSeconds?: number;
 }
+
+// ---------------- Settings Module Types ---------------- //
+
+export type AppTheme = "system" | "dark" | "light";
+
+export type AppLanguage =
+  | "auto"
+  | "en"
+  | "es"
+  | "fr"
+  | "de"
+  | "pt"
+  | "ru"
+  | "ja"
+  | "it";
+
+export interface ReminderSettings {
+  enabled: boolean;
+  workDays: number[]; // 1=Mon, 2=Tue, ..., 7=Sun
+  startTime: string;  // e.g. "09:00"
+  endTime: string;    // e.g. "17:00"
+  intervalMinutes: number; // e.g. 60 or 120
+}
+
+export interface CalendarSettings {
+  integrationEnabled: boolean;
+  calendarAccessStatus: "disabled" | "enabled" | "prompt";
+  showWorkingDaysOnly: boolean;
+  syncedCalendars: string[];
+}
+
+export interface WorkspaceNotificationSettings {
+  notificationsEnabled: boolean;
+  pushNotifications: boolean;
+  emailNotifications: boolean;
+  timeTrackingReminders: boolean;
+  timerAutoStop: boolean;
+  weeklyReportReminder: boolean;
+  timeOffAlerts: boolean;
+}
+
+export interface WorkspaceSettings {
+  id: string;
+  workspaceId: string;
+  workspaceName: string;
+  defaultProjectId: string | null;
+  defaultProjectName: string;
+  defaultProjectColor?: string | null;
+  notifications: WorkspaceNotificationSettings;
+}
+
+export interface MobileAppSettings {
+  theme: AppTheme;
+  themeLabel: string;
+  language: AppLanguage;
+  languageLabel: string;
+  forcedOfflineMode: boolean;
+  reminders: ReminderSettings;
+  calendar: CalendarSettings;
+  appVersion: string;
+}
+
+export interface MobileSettingsState {
+  app: MobileAppSettings;
+  workspace: WorkspaceSettings;
+}
+
+// ---------------- Auto Tracker Module Types ---------------- //
+
+export type ActivityIconType =
+  | "code"
+  | "design"
+  | "browser"
+  | "terminal"
+  | "document"
+  | "communication";
+
+export interface DetectedActivity {
+  id: string;
+  app: string;
+  windowTitle: string;
+  iconType: ActivityIconType;
+  suggestedProjectId?: string;
+  suggestedProject: string;
+  projectColor: string;
+  startTime: string; // "08:30 AM"
+  endTime: string;   // "10:45 AM"
+  durationMinutes: number;
+  durationSeconds: number;
+  isLogged: boolean;
+  date: string;
+}
+
+export interface AutoTrackerStatus {
+  isRecording: boolean;
+  engineStatus: "active" | "paused";
+  activeApp: string;
+  activeWindowTitle: string;
+  unloggedCount: number;
+  unloggedMinutes: number;
+  totalCount: number;
+  totalMinutes: number;
+}
+
+export interface ScheduleAssignmentDTO {
+  id: string;
+  project_id: string;
+  project_name: string;
+  project_color: string;
+  client: string;
+  member_id: string;
+  member_name: string;
+  member_initials: string;
+  member_avatar_color: string;
+  start_date: string;
+  end_date: string;
+  hours_per_day: number;
+  total_hours: number;
+  note?: string;
+  version_label?: string;
+  is_hatched?: boolean;
+  is_milestone_active?: boolean;
+}
+
+export interface CreateScheduleAssignmentPayload {
+  project_id: string;
+  project_name: string;
+  project_color: string;
+  client: string;
+  member_id: string;
+  member_name: string;
+  member_initials: string;
+  member_avatar_color: string;
+  start_date: string;
+  end_date: string;
+  hours_per_day: number;
+  total_hours: number;
+  note?: string;
+  version_label?: string;
+  is_hatched?: boolean;
+  is_milestone_active?: boolean;
+}
+
+export interface UpdateScheduleAssignmentPayload {
+  project_id?: string;
+  project_name?: string;
+  project_color?: string;
+  client?: string;
+  member_id?: string;
+  member_name?: string;
+  member_initials?: string;
+  member_avatar_color?: string;
+  start_date?: string;
+  end_date?: string;
+  hours_per_day?: number;
+  total_hours?: number;
+  note?: string;
+  version_label?: string;
+  is_hatched?: boolean;
+  is_milestone_active?: boolean;
+}
+
+export interface ScheduleFilter {
+  start_date?: string;
+  end_date?: string;
+  project_id?: string;
+  member_id?: string;
+  client?: string;
+}
+
+export interface ScheduleSummaryDTO {
+  total_assignments: number;
+  total_scheduled_hours: number;
+  total_members_scheduled: number;
+  total_projects_scheduled: number;
+  is_published: boolean;
+}
+
+
+

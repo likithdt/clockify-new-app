@@ -33,6 +33,7 @@ interface NewTimeEntryScreenProps {
   tags: Tag[];
   initialEntry?: TimeEntry | null;
   initialDurationSeconds?: number;
+  defaultProjectId?: string | null;
 }
 
 export const NewTimeEntryScreen: React.FC<NewTimeEntryScreenProps> = ({
@@ -43,6 +44,7 @@ export const NewTimeEntryScreen: React.FC<NewTimeEntryScreenProps> = ({
   tags,
   initialEntry,
   initialDurationSeconds,
+  defaultProjectId,
 }) => {
   // Form State
   const [description, setDescription] = useState("");
@@ -83,7 +85,7 @@ export const NewTimeEntryScreen: React.FC<NewTimeEntryScreenProps> = ({
       setStartDate(initialEntry.startTime ? new Date(initialEntry.startTime) : new Date());
     } else {
       setDescription("");
-      setSelectedProjectId("");
+      setSelectedProjectId(defaultProjectId || "");
       setSelectedTaskId("");
       setSelectedTaskName("");
       setSelectedTags([]);
@@ -91,7 +93,7 @@ export const NewTimeEntryScreen: React.FC<NewTimeEntryScreenProps> = ({
       setDurationSeconds(initialDurationSeconds || 0);
       setStartDate(new Date());
     }
-  }, [isOpen, initialEntry, initialDurationSeconds]);
+  }, [isOpen, initialEntry, initialDurationSeconds, defaultProjectId]);
 
   if (!isOpen) return null;
 

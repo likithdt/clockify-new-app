@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useInvoiceStore } from "@/stores/useInvoiceStore";
 import { X, ChevronDown, Calendar } from "lucide-react";
 import { format, addDays } from "date-fns";
@@ -10,12 +10,17 @@ const CLIENTS = [
     "Global Tech Labs",
 ];
 
-export function CreateInvoiceModal() {
-    const { isCreateModalOpen, closeCreateModal, createInvoice, invoices } =
+export interface CreateInvoiceModalProps {
+    onNavigateToInvoices?: () => void;
+}
+
+export function CreateInvoiceModal({ onNavigateToInvoices }: CreateInvoiceModalProps = {}) {
+    const { isCreateModalOpen, draftInvoice, closeCreateModal, createInvoice, invoices } =
         useInvoiceStore();
 
     const [selectedClient, setSelectedClient] = useState("");
     const [currency, setCurrency] = useState("INR");
+    const [amount, setAmount] = useState("330.00");
     const [invoiceNumber, setInvoiceNumber] = useState(
         `[SAMPLE] Invoice ${invoices.length + 1}`
     );
@@ -23,27 +28,47 @@ export function CreateInvoiceModal() {
     const [dueDate, setDueDate] = useState("10 days after issue");
     const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false);
 
+    useEffect(() => {
+        if (isCreateModalOpen) {
+            setSelectedClient(draftInvoice?.client || "[SAMPLE] Client B");
+            setCurrency(draftInvoice?.currency || "INR");
+            setAmount(
+                draftInvoice?.amount !== undefined ? String(draftInvoice.amount) : "330.00"
+            );
+            setInvoiceNumber(
+                draftInvoice?.invoiceNumber || `[SAMPLE] Invoice ${invoices.length + 1}`
+            );
+            setIssueDate(draftInvoice?.issueDate || "Today");
+            setDueDate(draftInvoice?.dueDate || "10 days after issue");
+        }
+    }, [isCreateModalOpen, draftInvoice, invoices.length]);
+
     if (!isCreateModalOpen) return null;
 
-    const handleCreate = (e: React.FormEvent) => {
+    const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         const client = selectedClient || "[SAMPLE] Client B";
         const todayStr = format(new Date(), "dd/MM/yyyy");
         const dueStr = format(addDays(new Date(), 10), "dd/MM/yyyy");
+        const numAmount = parseFloat(amount) || 330.0;
 
-        createInvoice({
+        await createInvoice({
             client,
             currency,
             invoiceNumber: invoiceNumber.trim() || `Invoice #${Date.now()}`,
             issueDate: issueDate === "Today" ? todayStr : issueDate,
             dueDate: dueDate === "10 days after issue" ? dueStr : dueDate,
-            amount: 750.0,
+            amount: numAmount,
         });
 
         // Reset
         setSelectedClient("");
         setInvoiceNumber(`[SAMPLE] Invoice ${invoices.length + 2}`);
         closeCreateModal();
+
+        if (onNavigateToInvoices) {
+            onNavigateToInvoices();
+        }
     };
 
     return (
@@ -106,17 +131,31 @@ export function CreateInvoiceModal() {
                         )}
                     </div>
 
-                    {/* Currency */}
-                    <div>
-                        <label className="block text-xs font-semibold text-[#1E293B] mb-1.5">
-                            Currency
-                        </label>
-                        <input
-                            type="text"
-                            value={currency}
-                            onChange={(e) => setCurrency(e.target.value)}
-                            className="w-full px-3 py-2 border border-[#E2E8F0] rounded text-xs text-[#1E293B] focus:outline-none focus:border-[#03A9F4]"
-                        />
+                    {/* Currency & Amount */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-[#1E293B] mb-1.5">
+                                Currency
+                            </label>
+                            <input
+                                type="text"
+                                value={currency}
+                                onChange={(e) => setCurrency(e.target.value)}
+                                className="w-full px-3 py-2 border border-[#E2E8F0] rounded text-xs text-[#1E293B] focus:outline-none focus:border-[#03A9F4]"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-[#1E293B] mb-1.5">
+                                Amount ({currency})
+                            </label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                                className="w-full px-3 py-2 border border-[#E2E8F0] rounded text-xs text-[#1E293B] focus:outline-none focus:border-[#03A9F4]"
+                            />
+                        </div>
                     </div>
 
                     {/* Invoice ID */}

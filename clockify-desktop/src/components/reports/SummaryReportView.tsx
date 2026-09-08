@@ -5,6 +5,7 @@ import {
     Share2,
     FileText,
 } from "lucide-react";
+import { useInvoiceStore } from "@/stores/useInvoiceStore";
 
 interface ProjectBreakdownItem {
     id: string;
@@ -59,11 +60,17 @@ const SUMMARY_PROJECTS: ProjectBreakdownItem[] = [
     },
 ];
 
-export function SummaryReportView() {
+export interface SummaryReportViewProps {
+    onNavigateToInvoices?: () => void;
+}
+
+export function SummaryReportView({ onNavigateToInvoices: _onNavigateToInvoices }: SummaryReportViewProps = {}) {
     const [isRoundingOn, setIsRoundingOn] = useState(false);
     const [showEstimate, setShowEstimate] = useState(false);
     const [billabilityFilter, setBillabilityFilter] = useState("Billability");
     const [isBillabilityDropdownOpen, setIsBillabilityDropdownOpen] = useState(false);
+
+    const { openCreateModal, invoices } = useInvoiceStore();
 
     return (
         <div className="space-y-4 select-none">
@@ -90,10 +97,19 @@ export function SummaryReportView() {
                 <div className="flex items-center gap-4 text-xs">
                     <button
                         type="button"
-                        className="text-[#64748B] hover:text-[#03A9F4] font-medium flex items-center gap-1 cursor-pointer transition"
+                        onClick={() => {
+                            openCreateModal({
+                                client: "[SAMPLE] Client B",
+                                currency: "INR",
+                                amount: 330.00,
+                                invoiceNumber: `[SAMPLE] Invoice ${invoices.length + 1}`,
+                            });
+                        }}
+                        className="text-[#03A9F4] hover:text-[#0288D1] font-medium flex items-center gap-1.5 cursor-pointer transition py-1 px-1.5 rounded hover:bg-[#E1F5FE]"
+                        title="Create invoice from this report"
                     >
-                        <FileText className="w-3.5 h-3.5" />
-                        <span>Create invoice</span>
+                        <FileText className="w-4 h-4 text-[#03A9F4]" />
+                        <span className="font-semibold text-[#03A9F4]">Create invoice</span>
                     </button>
 
                     <button

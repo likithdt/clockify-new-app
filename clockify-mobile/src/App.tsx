@@ -13,6 +13,7 @@ import { TagsScreen } from "./screens/TagsScreen";
 import { TeamScreen } from "./screens/TeamScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import { AutoTrackerScreen } from "./screens/AutoTrackerScreen";
+import { ScheduleScreen } from "./screens/ScheduleScreen";
 
 // Screens & Modals
 import { NewTimeEntryScreen } from "./screens/NewTimeEntryScreen";
@@ -726,6 +727,11 @@ export default function App() {
             isCalendarMenuOpen={isCalendarMenuOpen}
             onCloseCalendarMenu={() => setIsCalendarMenuOpen(false)}
           />
+        )}
+
+        {/* SCHEDULE SCREEN */}
+        {currentScreen === "schedule" && (
+          <ScheduleScreen />
         )}
 
         {/* EXPENSES SCREEN */}

@@ -1,6 +1,7 @@
 import { TimeTrackerController, type ApiResponse } from "../controllers/TimeTrackerController.ts";
 import { SettingsController } from "../controllers/SettingsController.ts";
 import { AutoTrackerController } from "../controllers/AutoTrackerController.ts";
+import { ScheduleController } from "../controllers/ScheduleController.ts";
 
 export interface RequestContext {
   method: string;
@@ -204,6 +205,39 @@ export async function handleApiRoute(req: RequestContext): Promise<ApiResponse> 
   }
   if (normalizedPath === "/api/autotracker/reset" && method === "POST") {
     return AutoTrackerController.reset();
+  }
+
+  // Schedule routes
+  if (normalizedPath === "/api/schedule/assignments" && method === "GET") {
+    return ScheduleController.listAssignments(query);
+  }
+  if (normalizedPath === "/api/schedule/assignments" && method === "POST") {
+    return ScheduleController.createAssignment(body);
+  }
+  const scheduleItemMatch = normalizedPath.match(/^\/api\/schedule\/assignments\/([^/]+)$/);
+  if (scheduleItemMatch) {
+    const id = scheduleItemMatch[1];
+    if (method === "GET") {
+      return ScheduleController.getAssignment(id);
+    }
+    if (method === "PUT" || method === "PATCH") {
+      return ScheduleController.updateAssignment(id, body);
+    }
+    if (method === "DELETE") {
+      return ScheduleController.deleteAssignment(id);
+    }
+  }
+  if (normalizedPath === "/api/schedule/toggle-publish" && method === "POST") {
+    return ScheduleController.togglePublish();
+  }
+  if (normalizedPath === "/api/schedule/remove-sample" && method === "POST") {
+    return ScheduleController.removeSampleData();
+  }
+  if (normalizedPath === "/api/schedule/restore-sample" && method === "POST") {
+    return ScheduleController.restoreSampleData();
+  }
+  if (normalizedPath === "/api/schedule/summary" && method === "GET") {
+    return ScheduleController.getSummary();
   }
 
   // Test seed / clear helpers

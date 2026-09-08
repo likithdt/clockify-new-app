@@ -3,6 +3,7 @@ import {
   Clock,
   Bot,
   Calendar,
+  CalendarRange,
   Receipt,
   RotateCcw,
   BarChart3,
@@ -153,6 +154,20 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
           >
             <Calendar className="w-5 h-5 text-[#8c9ba5]" />
             <span>Calendar</span>
+          </button>
+
+          {/* Schedule */}
+          <button
+            type="button"
+            onClick={() => handleItemClick("schedule")}
+            className={`w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-sm font-medium transition-all ${
+              currentScreen === "schedule"
+                ? "bg-[#28343f] text-white font-semibold"
+                : "text-[#c2cbd4] hover:bg-white/5 hover:text-white"
+            }`}
+          >
+            <CalendarRange className="w-5 h-5 text-[#8c9ba5]" />
+            <span>Schedule</span>
           </button>
 
           {/* Expenses */}

@@ -15,6 +15,7 @@ export type ScreenType =
   | "timeTracker"
   | "autoTracker"
   | "calendar"
+  | "schedule"
   | "expenses"
   | "timeOff"
   | "reports"
@@ -65,6 +66,8 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
         return "Auto Tracker";
       case "calendar":
         return "Calendar";
+      case "schedule":
+        return "Schedule";
       case "expenses":
         return "Expenses";
       case "timeOff":

@@ -270,16 +270,26 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
 
     navigateDateRange: (direction) => {
         const { startDate } = get().dateRange;
-        const currentStart = new Date(startDate);
+        const parseLocal = (s: string) => {
+            const [y, m, d] = s.split("-").map(Number);
+            return new Date(y, m - 1, d);
+        };
+        const formatLocal = (d: Date) => {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, "0");
+            const day = String(d.getDate()).padStart(2, "0");
+            return `${y}-${m}-${day}`;
+        };
+
+        const currentStart = parseLocal(startDate);
         const monthDelta = direction === "next" ? 1 : -1;
         const newStart = new Date(currentStart.getFullYear(), currentStart.getMonth() + monthDelta, 1);
         const newEnd = new Date(newStart.getFullYear(), newStart.getMonth() + 1, 0);
 
-        const formatDate = (d: Date) => d.toISOString().split("T")[0];
         set({
             dateRange: {
-                startDate: formatDate(newStart),
-                endDate: formatDate(newEnd),
+                startDate: formatLocal(newStart),
+                endDate: formatLocal(newEnd),
             },
         });
     },

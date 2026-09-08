@@ -19,7 +19,7 @@ import {
 import { ScheduleAddModal } from "./ScheduleAddModal";
 import { RemoveSampleScheduleModal } from "./RemoveSampleScheduleModal";
 
-// Helper to generate the day list for Aug 31 - Sep 30, 2026
+// Helper to generate the day list dynamically
 interface CalendarDay {
     dateStr: string; // YYYY-MM-DD
     dayNumber: string; // "31", "01", etc.
@@ -30,10 +30,26 @@ interface CalendarDay {
     isWeekEndBoundary: boolean; // Sunday
 }
 
-function generateDays(): CalendarDay[] {
+function generateDays(startDateStr: string, endDateStr: string): CalendarDay[] {
     const days: CalendarDay[] = [];
-    const start = new Date(2026, 7, 31); // Aug 31, 2026 (Monday)
-    const end = new Date(2026, 8, 30); // Sep 30, 2026
+    const parseLocal = (s: string) => {
+        const parts = s.split("-").map(Number);
+        return new Date(parts[0], parts[1] - 1, parts[2]);
+    };
+    const start = parseLocal(startDateStr);
+    const end = parseLocal(endDateStr);
+
+    if (start > end) {
+        end.setTime(start.getTime());
+    }
+
+    const todayStr = (() => {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+    })();
 
     let current = new Date(start);
     while (current <= end) {
@@ -41,15 +57,12 @@ function generateDays(): CalendarDay[] {
         const month = String(current.getMonth() + 1).padStart(2, "0");
         const day = String(current.getDate()).padStart(2, "0");
         const dateStr = `${year}-${month}-${day}`;
-        const dayOfWeekNum = current.getDay(); // 0 is Sun, 6 is Sat
+        const dayOfWeekNum = current.getDay();
         const dayOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][dayOfWeekNum];
         const isWeekend = dayOfWeekNum === 0 || dayOfWeekNum === 6;
-        const isCurrentDay = dateStr === "2026-08-31";
+        const isCurrentDay = dateStr === todayStr || dateStr === "2026-08-31";
 
-        let monthLabel = "Sep";
-        if (current.getMonth() === 7 || (current.getMonth() === 8 && current.getDate() <= 6)) {
-            monthLabel = "Aug - Sep";
-        }
+        const monthLabel = current.toLocaleString("en-US", { month: "short" });
 
         days.push({
             dateStr,
@@ -90,6 +103,9 @@ export function SchedulePage() {
         deleteAssignment,
         loadFromBackend,
         assignments,
+        dateRange,
+        setDateRange,
+        navigateDateRange,
     } = useScheduleStore();
 
     useEffect(() => {
@@ -100,8 +116,57 @@ export function SchedulePage() {
 
     const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
     const [actionMenuId, setActionMenuId] = useState<string | null>(null);
+    const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+    const [tempStart, setTempStart] = useState(dateRange.startDate);
+    const [tempEnd, setTempEnd] = useState(dateRange.endDate);
 
-    const days = useMemo(() => generateDays(), []);
+    const days = useMemo(
+        () => generateDays(dateRange.startDate, dateRange.endDate),
+        [dateRange.startDate, dateRange.endDate]
+    );
+
+    const formattedDateRange = useMemo(() => {
+        const parseLocal = (s: string) => {
+            const [y, m, d] = s.split("-").map(Number);
+            return new Date(y, m - 1, d);
+        };
+        const s = parseLocal(dateRange.startDate);
+        const e = parseLocal(dateRange.endDate);
+
+        const sStr = s.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+        const eStr = e.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+
+        return `${sStr} - ${eStr}`;
+    }, [dateRange.startDate, dateRange.endDate]);
+
+    const monthChunks = useMemo(() => {
+        if (days.length === 0) return [];
+        const chunks: { label: string; count: number }[] = [];
+        let currentLabel = "";
+        let currentCount = 0;
+
+        days.forEach((day, idx) => {
+            const [y, m, d] = day.dateStr.split("-").map(Number);
+            const dateObj = new Date(y, m - 1, d);
+            const label = dateObj.toLocaleString("en-US", { month: "short", year: "numeric" });
+
+            if (label !== currentLabel) {
+                if (currentCount > 0) {
+                    chunks.push({ label: currentLabel, count: currentCount });
+                }
+                currentLabel = label;
+                currentCount = 1;
+            } else {
+                currentCount++;
+            }
+
+            if (idx === days.length - 1) {
+                chunks.push({ label: currentLabel, count: currentCount });
+            }
+        });
+
+        return chunks;
+    }, [days]);
 
     // Column width according to zoom level
     const colWidth = zoomLevel === "compact" ? 36 : zoomLevel === "normal" ? 44 : 56;
@@ -206,14 +271,24 @@ export function SchedulePage() {
 
     // Calculate position and span of an assignment block relative to the calendar days
     const getBlockStyle = (startDate: string, endDate: string) => {
-        const startIndex = days.findIndex((d) => d.dateStr === startDate);
-        const endIndex = days.findIndex((d) => d.dateStr === endDate);
+        if (days.length === 0) return null;
+        const firstDay = days[0].dateStr;
+        const lastDay = days[days.length - 1].dateStr;
 
-        const safeStart = startIndex >= 0 ? startIndex : 0;
-        const safeEnd = endIndex >= 0 ? endIndex : Math.min(safeStart + 1, days.length - 1);
-        const spanDays = Math.max(1, safeEnd - safeStart + 1);
+        // If completely outside the visible date range
+        if (endDate < firstDay || startDate > lastDay) {
+            return null;
+        }
 
-        const leftPx = safeStart * colWidth;
+        let startIndex = days.findIndex((d) => d.dateStr === startDate);
+        let endIndex = days.findIndex((d) => d.dateStr === endDate);
+
+        if (startIndex < 0) startIndex = 0;
+        if (endIndex < 0) endIndex = days.length - 1;
+
+        const spanDays = Math.max(1, endIndex - startIndex + 1);
+
+        const leftPx = startIndex * colWidth;
         const widthPx = spanDays * colWidth;
 
         return {
@@ -283,25 +358,192 @@ export function SchedulePage() {
                         </button>
 
                         {/* Date Range Selector matching Schedule.png */}
-                        <div className="flex items-center bg-white border border-[#E2E8F0] rounded shadow-2xs text-xs text-[#334155]">
-                            <div className="flex items-center gap-2 px-3 py-1.5 border-r border-[#E2E8F0]">
-                                <Calendar className="w-4 h-4 text-[#64748B]" />
-                                <span className="font-medium">Aug 31, 2026 - Sep 30, 2026</span>
+                        <div className="relative">
+                            <div className="flex items-center bg-white border border-[#E2E8F0] rounded shadow-2xs text-xs text-[#334155]">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setTempStart(dateRange.startDate);
+                                        setTempEnd(dateRange.endDate);
+                                        setIsDatePickerOpen(!isDatePickerOpen);
+                                    }}
+                                    className="flex items-center gap-2 px-3 py-1.5 border-r border-[#E2E8F0] hover:bg-[#F8FAFC] transition cursor-pointer"
+                                    title="Click to change date range"
+                                >
+                                    <Calendar className="w-4 h-4 text-[#03A9F4]" />
+                                    <span className="font-medium">{formattedDateRange}</span>
+                                    <ChevronDown className="w-3 h-3 text-[#94A3B8]" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => navigateDateRange("prev")}
+                                    className="p-1.5 hover:bg-[#F8FAFC] text-[#64748B] border-r border-[#E2E8F0] transition cursor-pointer"
+                                    title="Previous month"
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => navigateDateRange("next")}
+                                    className="p-1.5 hover:bg-[#F8FAFC] text-[#64748B] transition cursor-pointer"
+                                    title="Next month"
+                                >
+                                    <ChevronRight className="w-4 h-4" />
+                                </button>
                             </div>
-                            <button
-                                type="button"
-                                className="p-1.5 hover:bg-[#F8FAFC] text-[#64748B] border-r border-[#E2E8F0] transition cursor-pointer"
-                                title="Previous month"
-                            >
-                                <ChevronLeft className="w-4 h-4" />
-                            </button>
-                            <button
-                                type="button"
-                                className="p-1.5 hover:bg-[#F8FAFC] text-[#64748B] transition cursor-pointer"
-                                title="Next month"
-                            >
-                                <ChevronRight className="w-4 h-4" />
-                            </button>
+
+                            {/* Date Picker Dropdown Popover */}
+                            {isDatePickerOpen && (
+                                <>
+                                    <div
+                                        className="fixed inset-0 z-30"
+                                        onClick={() => setIsDatePickerOpen(false)}
+                                    />
+                                    <div className="absolute right-0 mt-1.5 w-80 bg-white border border-[#CBD5E1] rounded-lg shadow-xl z-40 p-4 text-xs text-[#334155] animate-in fade-in zoom-in-95 duration-150">
+                                        <div className="font-bold text-[#1E293B] mb-2.5 pb-2 border-b border-[#E2E8F0] flex items-center justify-between">
+                                            <span>Select Date Range</span>
+                                            <span className="text-[10px] text-[#64748B] font-normal">
+                                                {days.length} days visible
+                                            </span>
+                                        </div>
+
+                                        {/* Presets Grid */}
+                                        <div className="mb-3">
+                                            <div className="text-[10px] font-bold uppercase tracking-wider text-[#94A3B8] mb-1.5">
+                                                Presets
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-1.5">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setDateRange({ startDate: "2026-08-31", endDate: "2026-09-30" });
+                                                        setIsDatePickerOpen(false);
+                                                    }}
+                                                    className="px-2 py-1.5 text-left rounded bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[11px] font-medium transition cursor-pointer truncate"
+                                                >
+                                                    Aug 31 - Sep 30, 2026
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const d = new Date();
+                                                        const start = new Date(d.getFullYear(), d.getMonth(), 1);
+                                                        const end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+                                                        const fmt = (x: Date) => {
+                                                            const y = x.getFullYear();
+                                                            const m = String(x.getMonth() + 1).padStart(2, "0");
+                                                            const day = String(x.getDate()).padStart(2, "0");
+                                                            return `${y}-${m}-${day}`;
+                                                        };
+                                                        setDateRange({ startDate: fmt(start), endDate: fmt(end) });
+                                                        setIsDatePickerOpen(false);
+                                                    }}
+                                                    className="px-2 py-1.5 text-left rounded bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[11px] font-medium transition cursor-pointer truncate"
+                                                >
+                                                    This Month
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const d = new Date();
+                                                        const start = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+                                                        const end = new Date(d.getFullYear(), d.getMonth() + 2, 0);
+                                                        const fmt = (x: Date) => {
+                                                            const y = x.getFullYear();
+                                                            const m = String(x.getMonth() + 1).padStart(2, "0");
+                                                            const day = String(x.getDate()).padStart(2, "0");
+                                                            return `${y}-${m}-${day}`;
+                                                        };
+                                                        setDateRange({ startDate: fmt(start), endDate: fmt(end) });
+                                                        setIsDatePickerOpen(false);
+                                                    }}
+                                                    className="px-2 py-1.5 text-left rounded bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[11px] font-medium transition cursor-pointer truncate"
+                                                >
+                                                    Next Month
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const parseLocal = (s: string) => {
+                                                            const [y, m, d] = s.split("-").map(Number);
+                                                            return new Date(y, m - 1, d);
+                                                        };
+                                                        const formatLocal = (d: Date) => {
+                                                            const y = d.getFullYear();
+                                                            const m = String(d.getMonth() + 1).padStart(2, "0");
+                                                            const day = String(d.getDate()).padStart(2, "0");
+                                                            return `${y}-${m}-${day}`;
+                                                        };
+                                                        const s = parseLocal(dateRange.startDate);
+                                                        const e = new Date(s.getFullYear(), s.getMonth(), s.getDate() + 13);
+                                                        setDateRange({ startDate: formatLocal(s), endDate: formatLocal(e) });
+                                                        setIsDatePickerOpen(false);
+                                                    }}
+                                                    className="px-2 py-1.5 text-left rounded bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[11px] font-medium transition cursor-pointer truncate"
+                                                >
+                                                    Next 2 Weeks
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Custom Range */}
+                                        <div className="space-y-2 pt-2 border-t border-[#E2E8F0]">
+                                            <div className="text-[10px] font-bold uppercase tracking-wider text-[#94A3B8]">
+                                                Custom Dates
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div>
+                                                    <label className="block text-[10px] text-[#64748B] mb-1">
+                                                        Start Date
+                                                    </label>
+                                                    <input
+                                                        type="date"
+                                                        value={tempStart}
+                                                        onChange={(e) => setTempStart(e.target.value)}
+                                                        className="w-full bg-[#F8FAFC] border border-[#CBD5E1] rounded px-2 py-1 text-xs text-[#1E293B] focus:outline-none focus:border-[#03A9F4]"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] text-[#64748B] mb-1">
+                                                        End Date
+                                                    </label>
+                                                    <input
+                                                        type="date"
+                                                        value={tempEnd}
+                                                        onChange={(e) => setTempEnd(e.target.value)}
+                                                        className="w-full bg-[#F8FAFC] border border-[#CBD5E1] rounded px-2 py-1 text-xs text-[#1E293B] focus:outline-none focus:border-[#03A9F4]"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center justify-end gap-2 pt-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setIsDatePickerOpen(false)}
+                                                    className="px-2.5 py-1 text-xs text-[#64748B] hover:text-[#1E293B] cursor-pointer"
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        if (tempStart && tempEnd) {
+                                                            if (tempStart <= tempEnd) {
+                                                                setDateRange({ startDate: tempStart, endDate: tempEnd });
+                                                                setIsDatePickerOpen(false);
+                                                            } else {
+                                                                alert("Start date cannot be after end date");
+                                                            }
+                                                        }
+                                                    }}
+                                                    className="px-3 py-1 bg-[#03A9F4] hover:bg-[#0288D1] text-white font-semibold rounded shadow-2xs text-xs cursor-pointer"
+                                                >
+                                                    Apply
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -634,38 +876,19 @@ export function SchedulePage() {
                                 <div className="sticky top-0 z-20 bg-white border-b border-[#E2E8F0]">
                                     {/* Month Labels row */}
                                     <div className="h-6 flex text-[11px] font-semibold text-[#64748B] bg-[#F8FAFC] border-b border-[#E2E8F0]">
-                                        {/* Aug - Sep block */}
-                                        <div
-                                            style={{ width: `${7 * colWidth}px` }}
-                                            className="px-3 flex items-center border-r border-dashed border-[#CBD5E1]"
-                                        >
-                                            Aug - Sep
-                                        </div>
-                                        {/* Sep blocks */}
-                                        <div
-                                            style={{ width: `${7 * colWidth}px` }}
-                                            className="px-3 flex items-center border-r border-dashed border-[#CBD5E1]"
-                                        >
-                                            Sep
-                                        </div>
-                                        <div
-                                            style={{ width: `${7 * colWidth}px` }}
-                                            className="px-3 flex items-center border-r border-dashed border-[#CBD5E1]"
-                                        >
-                                            Sep
-                                        </div>
-                                        <div
-                                            style={{ width: `${7 * colWidth}px` }}
-                                            className="px-3 flex items-center border-r border-dashed border-[#CBD5E1]"
-                                        >
-                                            Sep
-                                        </div>
-                                        <div
-                                            style={{ width: `${(days.length - 28) * colWidth}px` }}
-                                            className="px-3 flex items-center"
-                                        >
-                                            Sep
-                                        </div>
+                                        {monthChunks.map((chunk, idx) => (
+                                            <div
+                                                key={idx}
+                                                style={{ width: `${chunk.count * colWidth}px` }}
+                                                className={`px-3 flex items-center truncate ${
+                                                    idx < monthChunks.length - 1
+                                                        ? "border-r border-dashed border-[#CBD5E1]"
+                                                        : ""
+                                                }`}
+                                            >
+                                                {chunk.label}
+                                            </div>
+                                        ))}
                                     </div>
 
                                     {/* Days Numbers row */}
@@ -812,30 +1035,32 @@ export function SchedulePage() {
                                                                 className="h-10 relative flex items-center border-t border-[#F1F5F9]"
                                                             >
                                                                 {/* Individual Member Shift Block */}
-                                                                <div
-                                                                    className="absolute h-6 rounded px-2 text-[10px] font-semibold text-white flex items-center justify-between truncate shadow-2xs z-10 cursor-pointer hover:opacity-90 transition"
-                                                                    style={{
-                                                                        left: assignBlock.left,
-                                                                        width: assignBlock.width,
-                                                                        backgroundColor: assignment.projectColor,
-                                                                    }}
-                                                                    title={`${assignment.memberName} - ${assignment.totalHours}h (${assignment.hoursPerDay}h/day)`}
-                                                                >
-                                                                    <span className="truncate">
-                                                                        {assignment.memberName} ({assignment.hoursPerDay}h/d)
-                                                                    </span>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            deleteAssignment(assignment.id);
+                                                                {assignBlock && (
+                                                                    <div
+                                                                        className="absolute h-6 rounded px-2 text-[10px] font-semibold text-white flex items-center justify-between truncate shadow-2xs z-10 cursor-pointer hover:opacity-90 transition"
+                                                                        style={{
+                                                                            left: assignBlock.left,
+                                                                            width: assignBlock.width,
+                                                                            backgroundColor: assignment.projectColor,
                                                                         }}
-                                                                        className="hover:text-[#FEE2E2] p-0.5 ml-1 transition"
-                                                                        title="Delete assignment"
+                                                                        title={`${assignment.memberName} - ${assignment.totalHours}h (${assignment.hoursPerDay}h/day)`}
                                                                     >
-                                                                        <Trash2 className="w-3 h-3" />
-                                                                    </button>
-                                                                </div>
+                                                                        <span className="truncate">
+                                                                            {assignment.memberName} ({assignment.hoursPerDay}h/d)
+                                                                        </span>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                deleteAssignment(assignment.id);
+                                                                            }}
+                                                                            className="hover:text-[#FEE2E2] p-0.5 ml-1 transition cursor-pointer"
+                                                                            title="Delete assignment"
+                                                                        >
+                                                                            <Trash2 className="w-3 h-3" />
+                                                                        </button>
+                                                                    </div>
+                                                                )}
 
                                                                 {days.map((day) => (
                                                                     <div
@@ -865,6 +1090,7 @@ export function SchedulePage() {
                                                             assignment.startDate,
                                                             assignment.endDate
                                                         );
+                                                        if (!assignBlock) return null;
                                                         return (
                                                             <div
                                                                 key={assignment.id}
@@ -906,19 +1132,21 @@ export function SchedulePage() {
                                                                 key={assignment.id}
                                                                 className="h-10 relative flex items-center border-t border-[#F1F5F9]"
                                                             >
-                                                                <div
-                                                                    style={{
-                                                                        left: assignBlock.left,
-                                                                        width: assignBlock.width,
-                                                                        borderColor: assignment.projectColor,
-                                                                    }}
-                                                                    className="absolute h-6 rounded bg-white border-l-4 px-2 text-[10px] font-medium text-[#1E293B] flex items-center justify-between truncate shadow-2xs z-10"
-                                                                >
-                                                                    <span className="truncate">{assignment.projectName}</span>
-                                                                    <span className="text-[10px] text-[#64748B]">
-                                                                        {assignment.hoursPerDay}h/day
-                                                                    </span>
-                                                                </div>
+                                                                {assignBlock && (
+                                                                    <div
+                                                                        style={{
+                                                                            left: assignBlock.left,
+                                                                            width: assignBlock.width,
+                                                                            borderColor: assignment.projectColor,
+                                                                        }}
+                                                                        className="absolute h-6 rounded bg-white border-l-4 px-2 text-[10px] font-medium text-[#1E293B] flex items-center justify-between truncate shadow-2xs z-10"
+                                                                    >
+                                                                        <span className="truncate">{assignment.projectName}</span>
+                                                                        <span className="text-[10px] text-[#64748B]">
+                                                                            {assignment.hoursPerDay}h/day
+                                                                        </span>
+                                                                    </div>
+                                                                )}
 
                                                                 {days.map((day) => (
                                                                     <div

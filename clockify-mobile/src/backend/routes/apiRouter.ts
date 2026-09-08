@@ -1,4 +1,5 @@
 import { TimeTrackerController, type ApiResponse } from "../controllers/TimeTrackerController.ts";
+import { SettingsController } from "../controllers/SettingsController.ts";
 
 export interface RequestContext {
   method: string;
@@ -132,6 +133,47 @@ export async function handleApiRoute(req: RequestContext): Promise<ApiResponse> 
     return TimeTrackerController.updateTimeOffStatus(timeOffStatusMatch[1], body.status);
   }
 
+  // Settings routes
+  if (normalizedPath === "/api/settings" && method === "GET") {
+    return SettingsController.getAllSettings();
+  }
+  if (normalizedPath === "/api/settings/app" && method === "GET") {
+    return SettingsController.getAppSettings();
+  }
+  if (normalizedPath === "/api/settings/app" && (method === "PUT" || method === "PATCH")) {
+    return SettingsController.updateAppSettings(body);
+  }
+  if (normalizedPath === "/api/settings/theme" && method === "POST") {
+    return SettingsController.updateTheme(body);
+  }
+  if (normalizedPath === "/api/settings/language" && method === "POST") {
+    return SettingsController.updateLanguage(body);
+  }
+  if (normalizedPath === "/api/settings/offline-mode" && method === "POST") {
+    return SettingsController.setForcedOfflineMode(body);
+  }
+  if (normalizedPath === "/api/settings/reminders" && (method === "PUT" || method === "PATCH" || method === "POST")) {
+    return SettingsController.updateReminders(body);
+  }
+  if (normalizedPath === "/api/settings/calendar" && (method === "PUT" || method === "PATCH" || method === "POST")) {
+    return SettingsController.updateCalendarSettings(body);
+  }
+  if (normalizedPath === "/api/settings/workspace" && method === "GET") {
+    return SettingsController.getWorkspaceSettings();
+  }
+  if (normalizedPath === "/api/settings/workspace" && (method === "PUT" || method === "PATCH")) {
+    return SettingsController.updateWorkspaceSettings(body);
+  }
+  if (normalizedPath === "/api/settings/workspace/default-project" && method === "POST") {
+    return SettingsController.setDefaultProject(body);
+  }
+  if (normalizedPath === "/api/settings/workspace/notifications" && (method === "PUT" || method === "PATCH" || method === "POST")) {
+    return SettingsController.updateNotifications(body);
+  }
+  if (normalizedPath === "/api/settings/reset" && method === "POST") {
+    return SettingsController.resetSettings();
+  }
+
   // Test seed / clear helpers
   if (normalizedPath === "/api/seed-sample-data" && method === "POST") {
     return TimeTrackerController.seedSampleData();
@@ -140,6 +182,6 @@ export async function handleApiRoute(req: RequestContext): Promise<ApiResponse> 
     return TimeTrackerController.clearData();
   }
 
-
   return { status: 404, error: `API route '${method} ${path}' not found` };
 }
+

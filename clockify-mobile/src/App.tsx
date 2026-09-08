@@ -54,6 +54,10 @@ export default function App() {
   const [timeOffRequests, setTimeOffRequests] = useState<TimeOffRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Workspace & App Settings State
+  const [defaultProjectId, setDefaultProjectId] = useState<string | null>(null);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
+
   // Modals state
   const [showTimeEntryModal, setShowTimeEntryModal] = useState(false);
   const [editingEntry, setEditingEntry] = useState<TimeEntry | null>(null);
@@ -105,6 +109,7 @@ export default function App() {
         teamRes,
         expensesRes,
         timeOffRes,
+        settingsRes,
       ] = await Promise.all([
         fetch("/api/timer/status").then((r) => r.json()),
         fetch("/api/time-entries?grouped=true").then((r) => r.json()),
@@ -114,6 +119,7 @@ export default function App() {
         fetch("/api/team").then((r) => r.json()),
         fetch("/api/expenses").then((r) => r.json()),
         fetch("/api/time-off").then((r) => r.json()),
+        fetch("/api/settings").then((r) => r.json()).catch(() => null),
       ]);
 
       if (statusRes) setTimerStatus(statusRes);
@@ -124,6 +130,14 @@ export default function App() {
       if (Array.isArray(teamRes)) setTeamMembers(teamRes);
       if (Array.isArray(expensesRes)) setExpenses(expensesRes);
       if (Array.isArray(timeOffRes)) setTimeOffRequests(timeOffRes);
+      if (settingsRes?.data) {
+        if (settingsRes.data.workspace?.defaultProjectId) {
+          setDefaultProjectId(settingsRes.data.workspace.defaultProjectId);
+        }
+        if (typeof settingsRes.data.app?.forcedOfflineMode === "boolean") {
+          setIsOfflineMode(settingsRes.data.app.forcedOfflineMode);
+        }
+      }
     } catch (err) {
       console.error("Failed to fetch data:", err);
     } finally {
@@ -145,7 +159,8 @@ export default function App() {
     isBillable: boolean;
     tags: string[];
   }) => {
-    const proj = projects.find((p) => p.id === data.projectId);
+    const targetProjectId = data.projectId || (defaultProjectId || undefined);
+    const proj = projects.find((p) => p.id === targetProjectId);
     try {
       const res = await fetch("/api/timer/start", {
         method: "POST",
@@ -153,8 +168,8 @@ export default function App() {
         body: JSON.stringify({
           description: data.description,
           projectId: proj?.id,
-          projectName: proj?.name || data.projectName || "No project",
-          projectColor: proj?.color || data.projectColor || "#94a3b8",
+          projectName: proj?.name || data.projectName || (proj ? proj.name : "No project"),
+          projectColor: proj?.color || data.projectColor || (proj ? proj.color : "#94a3b8"),
           clientName: proj?.clientName || data.clientName,
           isBillable: data.isBillable,
           tags: data.tags,
@@ -600,6 +615,7 @@ export default function App() {
       <TopAppBar
         currentScreen={currentScreen}
         onOpenDrawer={() => setIsDrawerOpen(true)}
+        onBackClick={() => setCurrentScreen("timeTracker")}
         showSearch={showSearch}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -619,6 +635,22 @@ export default function App() {
           }
         }}
       />
+
+      {/* Forced Offline Mode Notification Banner */}
+      {isOfflineMode && (
+        <div className="bg-[#e65100]/25 border-b border-[#ff9800]/40 px-4 py-1.5 flex items-center justify-between text-xs text-[#ffb74d] shrink-0 select-none animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#ff9800] animate-pulse" />
+            <span className="font-medium">Offline Mode Active</span>
+          </div>
+          <button
+            onClick={() => setCurrentScreen("settings")}
+            className="text-[11px] underline text-[#ffcc80] hover:text-white transition-colors"
+          >
+            Settings
+          </button>
+        </div>
+      )}
 
       {/* Main Screen Content */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
@@ -754,7 +786,12 @@ export default function App() {
         )}
 
         {/* SETTINGS SCREEN */}
-        {currentScreen === "settings" && <SettingsScreen />}
+        {currentScreen === "settings" && (
+          <SettingsScreen
+            onDefaultProjectChange={(projId) => setDefaultProjectId(projId)}
+            onOfflineModeChange={(offline) => setIsOfflineMode(offline)}
+          />
+        )}
 
         {/* PROFILE SCREEN (when clicked from Drawer profile) */}
         {currentScreen === "profile" && (
@@ -825,6 +862,7 @@ export default function App() {
         tags={tags}
         initialEntry={editingEntry}
         initialDurationSeconds={manualDurationSeconds}
+        defaultProjectId={defaultProjectId}
       />
 
       <ProjectModal

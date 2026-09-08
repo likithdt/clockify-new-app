@@ -157,3 +157,70 @@ export interface UpdateTimeEntryPayload {
   endTime?: string;
   durationSeconds?: number;
 }
+
+// ---------------- Settings Module Types ---------------- //
+
+export type AppTheme = "system" | "dark" | "light";
+
+export type AppLanguage =
+  | "auto"
+  | "en"
+  | "es"
+  | "fr"
+  | "de"
+  | "pt"
+  | "ru"
+  | "ja"
+  | "it";
+
+export interface ReminderSettings {
+  enabled: boolean;
+  workDays: number[]; // 1=Mon, 2=Tue, ..., 7=Sun
+  startTime: string;  // e.g. "09:00"
+  endTime: string;    // e.g. "17:00"
+  intervalMinutes: number; // e.g. 60 or 120
+}
+
+export interface CalendarSettings {
+  integrationEnabled: boolean;
+  calendarAccessStatus: "disabled" | "enabled" | "prompt";
+  showWorkingDaysOnly: boolean;
+  syncedCalendars: string[];
+}
+
+export interface WorkspaceNotificationSettings {
+  notificationsEnabled: boolean;
+  pushNotifications: boolean;
+  emailNotifications: boolean;
+  timeTrackingReminders: boolean;
+  timerAutoStop: boolean;
+  weeklyReportReminder: boolean;
+  timeOffAlerts: boolean;
+}
+
+export interface WorkspaceSettings {
+  id: string;
+  workspaceId: string;
+  workspaceName: string;
+  defaultProjectId: string | null;
+  defaultProjectName: string;
+  defaultProjectColor?: string | null;
+  notifications: WorkspaceNotificationSettings;
+}
+
+export interface MobileAppSettings {
+  theme: AppTheme;
+  themeLabel: string;
+  language: AppLanguage;
+  languageLabel: string;
+  forcedOfflineMode: boolean;
+  reminders: ReminderSettings;
+  calendar: CalendarSettings;
+  appVersion: string;
+}
+
+export interface MobileSettingsState {
+  app: MobileAppSettings;
+  workspace: WorkspaceSettings;
+}
+

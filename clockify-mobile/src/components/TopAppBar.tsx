@@ -8,6 +8,7 @@ import {
   Download,
   Share2,
   X,
+  ArrowLeft,
 } from "lucide-react";
 
 export type ScreenType =
@@ -27,6 +28,7 @@ interface TopAppBarProps {
   currentScreen: ScreenType;
   title?: string;
   onOpenDrawer: () => void;
+  onBackClick?: () => void;
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
   showSearch?: boolean;
@@ -42,6 +44,7 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
   currentScreen,
   title,
   onOpenDrawer,
+  onBackClick,
   searchQuery = "",
   onSearchChange,
   showSearch = false,
@@ -106,18 +109,29 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
         </div>
       ) : (
         <>
-          {/* Left: Hamburger button with orange notification dot + Title */}
+          {/* Left: Back button or Hamburger button with orange notification dot + Title */}
           <div className="flex items-center gap-3.5">
-            <button
-              type="button"
-              onClick={onOpenDrawer}
-              className="relative p-1 -ml-1 text-white hover:text-gray-200 active:scale-95 transition-transform"
-              title="Open Navigation Drawer"
-            >
-              <Menu className="w-6 h-6 text-white" />
-              {/* Orange notification dot matching screenshots */}
-              <span className="absolute top-1 right-0.5 w-2 h-2 rounded-full bg-[#ff5722] ring-2 ring-[#0f1216]"></span>
-            </button>
+            {onBackClick && (currentScreen === "settings" || currentScreen === "profile") ? (
+              <button
+                type="button"
+                onClick={onBackClick}
+                className="p-1 -ml-1 text-white hover:text-gray-200 active:scale-95 transition-transform"
+                title="Back"
+              >
+                <ArrowLeft className="w-6 h-6 text-white" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onOpenDrawer}
+                className="relative p-1 -ml-1 text-white hover:text-gray-200 active:scale-95 transition-transform"
+                title="Open Navigation Drawer"
+              >
+                <Menu className="w-6 h-6 text-white" />
+                {/* Orange notification dot matching screenshots */}
+                <span className="absolute top-1 right-0.5 w-2 h-2 rounded-full bg-[#ff5722] ring-2 ring-[#0f1216]"></span>
+              </button>
+            )}
 
             <h1 className="text-xl font-medium tracking-tight text-white">
               {getScreenTitle()}

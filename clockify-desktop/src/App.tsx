@@ -2,6 +2,7 @@ import { useState } from "react";
 import { TopNavbar } from "@/components/common/TopNavbar";
 import { Sidebar, type PageRoute } from "@/components/common/Sidebar";
 import { InvoicesPage } from "@/components/invoices/InvoicesPage";
+import { CreateInvoiceModal } from "@/components/invoices/CreateInvoiceModal";
 import { ExpensesPage } from "@/components/expenses/ExpensesPage";
 import { ApprovalsPage } from "@/components/approvals/ApprovalsPage";
 import { TeamPage } from "@/components/team/TeamPage";
@@ -67,7 +68,7 @@ export default function App() {
                         <InvoicesPage />
                     ) : activeRoute === "reports" || activeRoute === "dashboard" ? (
                         /* Reports and Dashboard feature matching Reports.png, Reports (2).png, and Reports (3).png */
-                        <ReportsPage />
+                        <ReportsPage onNavigateToInvoices={() => setActiveRoute("invoices")} />
                     ) : activeRoute === "kiosks" ? (
                         /* Kiosks feature matching Kiosks.png & Creation of Kiosk.png */
                         <KiosksPage />
@@ -104,6 +105,9 @@ export default function App() {
                     )}
                 </main>
             </div>
+
+            {/* Global Create Invoice Modal accessible from Reports, Invoices, etc. */}
+            <CreateInvoiceModal onNavigateToInvoices={() => setActiveRoute("invoices")} />
         </div>
     );
 }

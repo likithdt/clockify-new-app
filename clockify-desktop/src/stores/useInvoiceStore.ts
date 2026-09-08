@@ -15,10 +15,20 @@ export interface Invoice {
     isSample: boolean;
 }
 
+export interface DraftInvoice {
+    client?: string;
+    currency?: string;
+    amount?: number;
+    invoiceNumber?: string;
+    issueDate?: string;
+    dueDate?: string;
+}
+
 interface InvoiceState {
     invoices: Invoice[];
     hasSampleData: boolean;
     isCreateModalOpen: boolean;
+    draftInvoice: DraftInvoice | null;
     isRemoveSampleModalOpen: boolean;
     filterClient: string;
     filterStatus: string;
@@ -27,7 +37,7 @@ interface InvoiceState {
 
     // Actions
     loadFromBackend: () => Promise<void>;
-    openCreateModal: () => void;
+    openCreateModal: (draft?: DraftInvoice) => void;
     closeCreateModal: () => void;
     openRemoveSampleModal: () => void;
     closeRemoveSampleModal: () => void;
@@ -79,6 +89,7 @@ export const useInvoiceStore = create<InvoiceState>((set) => ({
     invoices: INITIAL_SAMPLE_INVOICES,
     hasSampleData: true,
     isCreateModalOpen: false,
+    draftInvoice: null,
     isRemoveSampleModalOpen: false,
     filterClient: "All",
     filterStatus: "All",
@@ -113,8 +124,8 @@ export const useInvoiceStore = create<InvoiceState>((set) => ({
         }
     },
 
-    openCreateModal: () => set({ isCreateModalOpen: true }),
-    closeCreateModal: () => set({ isCreateModalOpen: false }),
+    openCreateModal: (draft) => set({ isCreateModalOpen: true, draftInvoice: draft || null }),
+    closeCreateModal: () => set({ isCreateModalOpen: false, draftInvoice: null }),
     openRemoveSampleModal: () => set({ isRemoveSampleModalOpen: true }),
     closeRemoveSampleModal: () => set({ isRemoveSampleModalOpen: false }),
 
@@ -136,6 +147,7 @@ export const useInvoiceStore = create<InvoiceState>((set) => ({
         set((state) => ({
             invoices: [newInvoice, ...state.invoices],
             isCreateModalOpen: false,
+            draftInvoice: null,
         }));
 
         try {

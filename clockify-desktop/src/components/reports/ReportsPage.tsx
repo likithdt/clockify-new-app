@@ -17,7 +17,11 @@ import { useReportStore } from "@/stores/useReportStore";
 
 export type ReportTab = "summary" | "detailed" | "weekly" | "shared";
 
-export function ReportsPage() {
+export interface ReportsPageProps {
+    onNavigateToInvoices?: () => void;
+}
+
+export function ReportsPage({ onNavigateToInvoices }: ReportsPageProps = {}) {
     const [activeTab, setActiveTab] = useState<ReportTab>("summary");
     const [isExportOpen, setIsExportOpen] = useState(false);
     const [isReportTypeOpen, setIsReportTypeOpen] = useState(false);
@@ -214,7 +218,9 @@ export function ReportsPage() {
 
                 {/* Main Tab View */}
                 <div className="pt-2">
-                    {activeTab === "summary" && <SummaryReportView />}
+                    {activeTab === "summary" && (
+                        <SummaryReportView onNavigateToInvoices={onNavigateToInvoices} />
+                    )}
                     {activeTab === "detailed" && <DetailedReportView />}
                     {activeTab === "weekly" && <WeeklyReportView />}
                     {activeTab === "shared" && (

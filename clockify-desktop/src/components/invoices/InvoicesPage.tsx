@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useInvoiceStore } from "@/stores/useInvoiceStore";
-import { CreateInvoiceModal } from "./CreateInvoiceModal";
 import { RemoveSampleDataModal } from "./RemoveSampleDataModal";
 import {
     Settings,
@@ -100,7 +99,7 @@ export function InvoicesPage() {
                         {/* CREATE INVOICE Button */}
                         <button
                             type="button"
-                            onClick={openCreateModal}
+                            onClick={() => openCreateModal()}
                             className="px-5 py-2.5 bg-[#03A9F4] hover:bg-[#0288D1] text-white text-xs font-bold uppercase tracking-wider rounded shadow-xs transition cursor-pointer"
                         >
                             CREATE INVOICE
@@ -387,7 +386,6 @@ export function InvoicesPage() {
             </div>
 
             {/* Modals */}
-            <CreateInvoiceModal />
             <RemoveSampleDataModal />
         </div>
     );

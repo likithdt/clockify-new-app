@@ -1,0 +1,377 @@
+import { create } from "zustand";
+import { approvalApi } from "@/lib/approvalApi";
+
+export interface TimesheetApprovalItem {
+    id: string;
+    period: string; // e.g. "Aug 31, 2026 - Sep 6, 2026"
+    periodSortDate: string; // ISO date for sorting
+    user: string;
+    teamManager: string;
+    time: string; // "16:00:00"
+    timeOff: string; // "00:00:00"
+    status: "pending" | "unsubmitted" | "approved" | "rejected";
+    submittedAt?: string;
+    approvedAt?: string;
+}
+
+export interface ExpenseApprovalItem {
+    id: string;
+    period: string; // e.g. "Jul 6, 2026 - Jul 12, 2026"
+    periodSortDate: string;
+    user: string;
+    teamManager: string;
+    category: string; // "Day rate"
+    amount: number;
+    currency: string;
+    status: "pending" | "unsubmitted" | "approved" | "rejected";
+    submittedAt?: string;
+    approvedAt?: string;
+}
+
+export type ApprovalTab = "timesheet" | "expenses";
+export type ApprovalStatusTab = "pending" | "unsubmitted" | "archive";
+export type SortOption = "date-desc" | "date-asc" | "user-asc";
+
+interface ApprovalState {
+    activeTab: ApprovalTab;
+    statusTab: ApprovalStatusTab;
+    sortBy: SortOption;
+    teamFilter: string;
+    categoryFilter: string;
+    selectedIds: string[];
+    toastMessage: string | null;
+    isLoading: boolean;
+
+    timesheetItems: TimesheetApprovalItem[];
+    expenseItems: ExpenseApprovalItem[];
+
+    // Actions
+    loadFromBackend: () => Promise<void>;
+    setActiveTab: (tab: ApprovalTab) => void;
+    setStatusTab: (tab: ApprovalStatusTab) => void;
+    setSortBy: (sort: SortOption) => void;
+    setTeamFilter: (team: string) => void;
+    setCategoryFilter: (cat: string) => void;
+    toggleSelect: (id: string) => void;
+    selectAllInGroup: (ids: string[]) => void;
+    clearSelection: () => void;
+    approveSelected: () => void;
+    approveAll: () => void;
+    rejectSelected: () => void;
+    remindToApprove: () => void;
+    setToastMessage: (msg: string | null) => void;
+    resetSampleData: () => void;
+}
+
+const initialTimesheets: TimesheetApprovalItem[] = [
+    {
+        id: "ts-1",
+        period: "Aug 31, 2026 - Sep 6, 2026",
+        periodSortDate: "2026-08-31",
+        user: "[SAMPLE] Amy Smith",
+        teamManager: "-",
+        time: "16:00:00",
+        timeOff: "00:00:00",
+        status: "pending",
+        submittedAt: "2026-09-01",
+    },
+    {
+        id: "ts-2",
+        period: "Jul 13, 2026 - Jul 19, 2026",
+        periodSortDate: "2026-07-13",
+        user: "[SAMPLE] James Anderson",
+        teamManager: "[SAMPLE] Lara Peterson",
+        time: "09:00:00",
+        timeOff: "00:00:00",
+        status: "pending",
+        submittedAt: "2026-07-20",
+    },
+    {
+        id: "ts-3",
+        period: "Jul 6, 2026 - Jul 12, 2026",
+        periodSortDate: "2026-07-06",
+        user: "[SAMPLE] Lara Peterson",
+        teamManager: "-",
+        time: "40:00:00",
+        timeOff: "08:00:00",
+        status: "pending",
+        submittedAt: "2026-07-13",
+    },
+    // Unsubmitted sample
+    {
+        id: "ts-unsub-1",
+        period: "Aug 31, 2026 - Sep 6, 2026",
+        periodSortDate: "2026-08-31",
+        user: "[SAMPLE] David Lee",
+        teamManager: "[SAMPLE] Lara Peterson",
+        time: "12:30:00",
+        timeOff: "00:00:00",
+        status: "unsubmitted",
+    },
+    // Archive sample
+    {
+        id: "ts-arch-1",
+        period: "Jun 22, 2026 - Jun 28, 2026",
+        periodSortDate: "2026-06-22",
+        user: "[SAMPLE] Amy Smith",
+        teamManager: "-",
+        time: "38:15:00",
+        timeOff: "00:00:00",
+        status: "approved",
+        approvedAt: "2026-06-29",
+    },
+];
+
+const initialExpenses: ExpenseApprovalItem[] = [
+    {
+        id: "exp-app-1",
+        period: "Jul 6, 2026 - Jul 12, 2026",
+        periodSortDate: "2026-07-06",
+        user: "[SAMPLE] Lara Peterson",
+        teamManager: "-",
+        category: "Day rate",
+        amount: 100.0,
+        currency: "INR",
+        status: "pending",
+        submittedAt: "2026-07-13",
+    },
+    // Unsubmitted sample
+    {
+        id: "exp-unsub-1",
+        period: "Aug 31, 2026 - Sep 6, 2026",
+        periodSortDate: "2026-08-31",
+        user: "[SAMPLE] James Anderson",
+        teamManager: "[SAMPLE] Lara Peterson",
+        category: "Travel",
+        amount: 240.5,
+        currency: "INR",
+        status: "unsubmitted",
+    },
+    // Archive sample
+    {
+        id: "exp-arch-1",
+        period: "Jun 15, 2026 - Jun 21, 2026",
+        periodSortDate: "2026-06-15",
+        user: "[SAMPLE] Lara Peterson",
+        teamManager: "-",
+        category: "Software",
+        amount: 49.0,
+        currency: "INR",
+        status: "approved",
+        approvedAt: "2026-06-22",
+    },
+];
+
+export const useApprovalStore = create<ApprovalState>((set, get) => ({
+    activeTab: "timesheet",
+    statusTab: "pending",
+    sortBy: "date-desc",
+    teamFilter: "all",
+    categoryFilter: "all",
+    selectedIds: [],
+    toastMessage: null,
+    isLoading: false,
+
+    timesheetItems: initialTimesheets,
+    expenseItems: initialExpenses,
+
+    loadFromBackend: async () => {
+        set({ isLoading: true });
+        try {
+            const [tsList, expList] = await Promise.all([
+                approvalApi.listTimesheets(),
+                approvalApi.listExpenses(),
+            ]);
+            if (tsList && expList) {
+                const mappedTs: TimesheetApprovalItem[] = tsList.map((t) => ({
+                    id: t.id,
+                    period: t.period,
+                    periodSortDate: t.period_sort_date,
+                    user: t.user,
+                    teamManager: t.team_manager,
+                    time: t.time,
+                    timeOff: t.time_off,
+                    status: t.status as TimesheetApprovalItem["status"],
+                    submittedAt: t.submitted_at,
+                    approvedAt: t.approved_at,
+                }));
+                const mappedExp: ExpenseApprovalItem[] = expList.map((e) => ({
+                    id: e.id,
+                    period: e.period,
+                    periodSortDate: e.period_sort_date,
+                    user: e.user,
+                    teamManager: e.team_manager,
+                    category: e.category,
+                    amount: e.amount,
+                    currency: e.currency,
+                    status: e.status as ExpenseApprovalItem["status"],
+                    submittedAt: e.submitted_at,
+                    approvedAt: e.approved_at,
+                }));
+                set({ timesheetItems: mappedTs, expenseItems: mappedExp, isLoading: false });
+            } else {
+                set({ isLoading: false });
+            }
+        } catch (e) {
+            console.warn("Could not load approvals from backend:", e);
+            set({ isLoading: false });
+        }
+    },
+
+    setActiveTab: (tab) => {
+        set({ activeTab: tab, selectedIds: [] });
+    },
+
+    setStatusTab: (tab) => {
+        set({ statusTab: tab, selectedIds: [] });
+    },
+
+    setSortBy: (sort) => {
+        set({ sortBy: sort });
+    },
+
+    setTeamFilter: (team) => {
+        set({ teamFilter: team });
+    },
+
+    setCategoryFilter: (cat) => {
+        set({ categoryFilter: cat });
+    },
+
+    toggleSelect: (id) => {
+        set((state) => {
+            if (state.selectedIds.includes(id)) {
+                return { selectedIds: state.selectedIds.filter((item) => item !== id) };
+            } else {
+                return { selectedIds: [...state.selectedIds, id] };
+            }
+        });
+    },
+
+    selectAllInGroup: (ids) => {
+        set((state) => {
+            const allSelected = ids.every((id) => state.selectedIds.includes(id));
+            if (allSelected) {
+                return {
+                    selectedIds: state.selectedIds.filter((id) => !ids.includes(id)),
+                };
+            } else {
+                const combined = Array.from(new Set([...state.selectedIds, ...ids]));
+                return { selectedIds: combined };
+            }
+        });
+    },
+
+    clearSelection: () => {
+        set({ selectedIds: [] });
+    },
+
+    approveSelected: () => {
+        const { activeTab, selectedIds } = get();
+        if (selectedIds.length === 0) return;
+
+        if (activeTab === "timesheet") {
+            set((state) => ({
+                timesheetItems: state.timesheetItems.map((item) =>
+                    selectedIds.includes(item.id)
+                        ? { ...item, status: "approved", approvedAt: new Date().toISOString().slice(0, 10) }
+                        : item
+                ),
+                selectedIds: [],
+                toastMessage: `${selectedIds.length} timesheet(s) approved.`,
+            }));
+            approvalApi.approveTimesheets(selectedIds).catch(console.error);
+        } else {
+            set((state) => ({
+                expenseItems: state.expenseItems.map((item) =>
+                    selectedIds.includes(item.id)
+                        ? { ...item, status: "approved", approvedAt: new Date().toISOString().slice(0, 10) }
+                        : item
+                ),
+                selectedIds: [],
+                toastMessage: `${selectedIds.length} expense(s) approved.`,
+            }));
+            approvalApi.approveExpenses(selectedIds).catch(console.error);
+        }
+    },
+
+    approveAll: () => {
+        const { activeTab } = get();
+        if (activeTab === "timesheet") {
+            const pending = get().timesheetItems.filter((i) => i.status === "pending");
+            if (pending.length === 0) return;
+            const ids = pending.map((p) => p.id);
+
+            set((state) => ({
+                timesheetItems: state.timesheetItems.map((item) =>
+                    item.status === "pending"
+                        ? { ...item, status: "approved", approvedAt: new Date().toISOString().slice(0, 10) }
+                        : item
+                ),
+                selectedIds: [],
+                toastMessage: `All ${pending.length} pending timesheet(s) approved.`,
+            }));
+            approvalApi.approveTimesheets(ids).catch(console.error);
+        } else {
+            const pending = get().expenseItems.filter((i) => i.status === "pending");
+            if (pending.length === 0) return;
+            const ids = pending.map((p) => p.id);
+
+            set((state) => ({
+                expenseItems: state.expenseItems.map((item) =>
+                    item.status === "pending"
+                        ? { ...item, status: "approved", approvedAt: new Date().toISOString().slice(0, 10) }
+                        : item
+                ),
+                selectedIds: [],
+                toastMessage: `All ${pending.length} pending expense(s) approved.`,
+            }));
+            approvalApi.approveExpenses(ids).catch(console.error);
+        }
+    },
+
+    rejectSelected: () => {
+        const { activeTab, selectedIds } = get();
+        if (selectedIds.length === 0) return;
+
+        if (activeTab === "timesheet") {
+            set((state) => ({
+                timesheetItems: state.timesheetItems.map((item) =>
+                    selectedIds.includes(item.id) ? { ...item, status: "rejected" } : item
+                ),
+                selectedIds: [],
+                toastMessage: `${selectedIds.length} timesheet(s) rejected.`,
+            }));
+            approvalApi.rejectTimesheets(selectedIds).catch(console.error);
+        } else {
+            set((state) => ({
+                expenseItems: state.expenseItems.map((item) =>
+                    selectedIds.includes(item.id) ? { ...item, status: "rejected" } : item
+                ),
+                selectedIds: [],
+                toastMessage: `${selectedIds.length} expense(s) rejected.`,
+            }));
+            approvalApi.rejectExpenses(selectedIds).catch(console.error);
+        }
+    },
+
+    remindToApprove: () => {
+        set({
+            toastMessage: "Reminder notification sent to team managers.",
+        });
+    },
+
+    setToastMessage: (msg) => {
+        set({ toastMessage: msg });
+    },
+
+    resetSampleData: () => {
+        set({
+            timesheetItems: initialTimesheets,
+            expenseItems: initialExpenses,
+            selectedIds: [],
+            toastMessage: "Sample approval data reset.",
+        });
+        approvalApi.resetSampleData().catch(console.error);
+    },
+}));

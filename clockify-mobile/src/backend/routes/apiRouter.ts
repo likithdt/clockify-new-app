@@ -1,0 +1,145 @@
+import { TimeTrackerController, type ApiResponse } from "../controllers/TimeTrackerController.ts";
+
+export interface RequestContext {
+  method: string;
+  path: string;
+  query: Record<string, string>;
+  body: any;
+}
+
+export async function handleApiRoute(req: RequestContext): Promise<ApiResponse> {
+  const { method, path, query, body } = req;
+  const normalizedPath = path.replace(/\/$/, "");
+
+  // Timer routes
+  if (normalizedPath === "/api/timer/status" && method === "GET") {
+    return TimeTrackerController.getTimerStatus();
+  }
+  if (normalizedPath === "/api/timer/start" && method === "POST") {
+    return TimeTrackerController.startTimer(body);
+  }
+  if (normalizedPath === "/api/timer/stop" && method === "POST") {
+    return TimeTrackerController.stopTimer();
+  }
+  if (normalizedPath === "/api/timer/discard" && method === "POST") {
+    return TimeTrackerController.discardTimer();
+  }
+
+  // Summary route
+  if (normalizedPath === "/api/summary" && method === "GET") {
+    return TimeTrackerController.getSummary();
+  }
+
+  // Time entries list & create
+  if (normalizedPath === "/api/time-entries" && method === "GET") {
+    const grouped = query.grouped !== "false";
+    return TimeTrackerController.listEntries(grouped);
+  }
+  if (normalizedPath === "/api/time-entries" && method === "POST") {
+    return TimeTrackerController.createEntry(body);
+  }
+
+  // Time entry item routes: /api/time-entries/:id
+  const itemMatch = normalizedPath.match(/^\/api\/time-entries\/([^/]+)$/);
+  if (itemMatch) {
+    const id = itemMatch[1];
+    if (method === "GET") {
+      return TimeTrackerController.getEntry(id);
+    }
+    if (method === "PUT" || method === "PATCH") {
+      return TimeTrackerController.updateEntry(id, body);
+    }
+    if (method === "DELETE") {
+      return TimeTrackerController.deleteEntry(id);
+    }
+  }
+
+  // Metadata routes
+  if (normalizedPath === "/api/projects" && method === "GET") {
+    return TimeTrackerController.listProjects();
+  }
+  if (normalizedPath === "/api/projects" && method === "POST") {
+    return TimeTrackerController.createProject(body);
+  }
+  const taskItemMatch = normalizedPath.match(/^\/api\/projects\/([^/]+)\/tasks\/([^/]+)$/);
+  if (taskItemMatch && (method === "PUT" || method === "PATCH")) {
+    return TimeTrackerController.updateTask(taskItemMatch[1], taskItemMatch[2], body);
+  }
+  const taskListMatch = normalizedPath.match(/^\/api\/projects\/([^/]+)\/tasks$/);
+  if (taskListMatch && method === "POST") {
+    return TimeTrackerController.createTask(taskListMatch[1], body);
+  }
+  const projectItemMatch = normalizedPath.match(/^\/api\/projects\/([^/]+)$/);
+  if (projectItemMatch && (method === "PUT" || method === "PATCH")) {
+    return TimeTrackerController.updateProject(projectItemMatch[1], body);
+  }
+  if (normalizedPath === "/api/tags" && method === "GET") {
+    return TimeTrackerController.listTags();
+  }
+  if (normalizedPath === "/api/tags" && method === "POST") {
+    return TimeTrackerController.createTag(body);
+  }
+
+  // Clients routes
+  if (normalizedPath === "/api/clients" && method === "GET") {
+    return TimeTrackerController.listClients();
+  }
+  if (normalizedPath === "/api/clients" && method === "POST") {
+    return TimeTrackerController.createClient(body);
+  }
+  const clientArchiveMatch = normalizedPath.match(/^\/api\/clients\/([^/]+)\/archive$/);
+  if (clientArchiveMatch && method === "POST") {
+    return TimeTrackerController.archiveClient(clientArchiveMatch[1]);
+  }
+  const clientMatch = normalizedPath.match(/^\/api\/clients\/([^/]+)$/);
+  if (clientMatch && method === "DELETE") {
+    return TimeTrackerController.deleteClient(clientMatch[1]);
+  }
+
+  // Team routes
+  if (normalizedPath === "/api/team" && method === "GET") {
+    return TimeTrackerController.listTeamMembers();
+  }
+  if (normalizedPath === "/api/team" && method === "POST") {
+    return TimeTrackerController.createTeamMember(body);
+  }
+  const teamMatch = normalizedPath.match(/^\/api\/team\/([^/]+)$/);
+  if (teamMatch && method === "DELETE") {
+    return TimeTrackerController.deleteTeamMember(teamMatch[1]);
+  }
+
+  // Expenses routes
+  if (normalizedPath === "/api/expenses" && method === "GET") {
+    return TimeTrackerController.listExpenses();
+  }
+  if (normalizedPath === "/api/expenses" && method === "POST") {
+    return TimeTrackerController.createExpense(body);
+  }
+  const expenseMatch = normalizedPath.match(/^\/api\/expenses\/([^/]+)$/);
+  if (expenseMatch && method === "DELETE") {
+    return TimeTrackerController.deleteExpense(expenseMatch[1]);
+  }
+
+  // Time Off routes
+  if (normalizedPath === "/api/time-off" && method === "GET") {
+    return TimeTrackerController.listTimeOff();
+  }
+  if (normalizedPath === "/api/time-off" && method === "POST") {
+    return TimeTrackerController.createTimeOff(body);
+  }
+  const timeOffStatusMatch = normalizedPath.match(/^\/api\/time-off\/([^/]+)\/status$/);
+  if (timeOffStatusMatch && (method === "PUT" || method === "PATCH")) {
+    return TimeTrackerController.updateTimeOffStatus(timeOffStatusMatch[1], body.status);
+  }
+
+  // Test seed / clear helpers
+  if (normalizedPath === "/api/seed-sample-data" && method === "POST") {
+    return TimeTrackerController.seedSampleData();
+  }
+  if (normalizedPath === "/api/clear-data" && method === "POST") {
+    return TimeTrackerController.clearData();
+  }
+
+
+  return { status: 404, error: `API route '${method} ${path}' not found` };
+}

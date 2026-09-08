@@ -1,5 +1,6 @@
 import { TimeTrackerController, type ApiResponse } from "../controllers/TimeTrackerController.ts";
 import { SettingsController } from "../controllers/SettingsController.ts";
+import { AutoTrackerController } from "../controllers/AutoTrackerController.ts";
 
 export interface RequestContext {
   method: string;
@@ -174,6 +175,37 @@ export async function handleApiRoute(req: RequestContext): Promise<ApiResponse> 
     return SettingsController.resetSettings();
   }
 
+  // Auto Tracker routes
+  if (normalizedPath === "/api/autotracker/activities" && method === "GET") {
+    return AutoTrackerController.getActivities();
+  }
+  if (normalizedPath === "/api/autotracker/status" && method === "GET") {
+    return AutoTrackerController.getStatus();
+  }
+  if (normalizedPath === "/api/autotracker/toggle" && method === "POST") {
+    return AutoTrackerController.toggleRecording();
+  }
+  if (normalizedPath === "/api/autotracker/log" && method === "POST") {
+    return AutoTrackerController.logActivity(body);
+  }
+  if (normalizedPath === "/api/autotracker/log-all" && method === "POST") {
+    return AutoTrackerController.logAll();
+  }
+  const autoTrackerProjectMatch = normalizedPath.match(/^\/api\/autotracker\/activity\/([^/]+)\/project$/);
+  if (autoTrackerProjectMatch && (method === "PUT" || method === "PATCH")) {
+    return AutoTrackerController.updateProject(autoTrackerProjectMatch[1], body);
+  }
+  const autoTrackerItemMatch = normalizedPath.match(/^\/api\/autotracker\/activity\/([^/]+)$/);
+  if (autoTrackerItemMatch && method === "DELETE") {
+    return AutoTrackerController.discardActivity(autoTrackerItemMatch[1]);
+  }
+  if (normalizedPath === "/api/autotracker/simulate" && method === "POST") {
+    return AutoTrackerController.simulateActivity();
+  }
+  if (normalizedPath === "/api/autotracker/reset" && method === "POST") {
+    return AutoTrackerController.reset();
+  }
+
   // Test seed / clear helpers
   if (normalizedPath === "/api/seed-sample-data" && method === "POST") {
     return TimeTrackerController.seedSampleData();
@@ -184,4 +216,5 @@ export async function handleApiRoute(req: RequestContext): Promise<ApiResponse> 
 
   return { status: 404, error: `API route '${method} ${path}' not found` };
 }
+
 

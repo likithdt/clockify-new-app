@@ -5,12 +5,15 @@ interface AndroidFrameProps {
   children: React.ReactNode;
   onBackPress?: () => void;
   onHomePress?: () => void;
+  theme?: string;
+  time?: string;
 }
 
 export const AndroidFrame: React.FC<AndroidFrameProps> = ({
   children,
   onBackPress,
   onHomePress,
+  time = "12:32",
 }) => {
   return (
     <div className="w-full min-h-screen bg-black flex items-center justify-center sm:py-4">
@@ -21,7 +24,7 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
         <div className="h-7 px-4 bg-[#0f1216] shrink-0 flex items-center justify-between text-xs text-white z-50 select-none">
           {/* Left: Time & notification icons */}
           <div className="flex items-center gap-2">
-            <span className="font-semibold tracking-tight text-[13px]">12:32</span>
+            <span className="font-semibold tracking-tight text-[13px]">{time}</span>
             <div className="flex items-center gap-1.5 opacity-80 scale-90">
               <MessageSquare className="w-3 h-3 text-white" />
               <Sparkles className="w-3 h-3 text-white" />

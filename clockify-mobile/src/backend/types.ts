@@ -224,3 +224,41 @@ export interface MobileSettingsState {
   workspace: WorkspaceSettings;
 }
 
+// ---------------- Auto Tracker Module Types ---------------- //
+
+export type ActivityIconType =
+  | "code"
+  | "design"
+  | "browser"
+  | "terminal"
+  | "document"
+  | "communication";
+
+export interface DetectedActivity {
+  id: string;
+  app: string;
+  windowTitle: string;
+  iconType: ActivityIconType;
+  suggestedProjectId?: string;
+  suggestedProject: string;
+  projectColor: string;
+  startTime: string; // "08:30 AM"
+  endTime: string;   // "10:45 AM"
+  durationMinutes: number;
+  durationSeconds: number;
+  isLogged: boolean;
+  date: string;
+}
+
+export interface AutoTrackerStatus {
+  isRecording: boolean;
+  engineStatus: "active" | "paused";
+  activeApp: string;
+  activeWindowTitle: string;
+  unloggedCount: number;
+  unloggedMinutes: number;
+  totalCount: number;
+  totalMinutes: number;
+}
+
+

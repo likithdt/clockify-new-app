@@ -13,6 +13,7 @@ import {
 
 export type ScreenType =
   | "timeTracker"
+  | "autoTracker"
   | "calendar"
   | "expenses"
   | "timeOff"
@@ -60,6 +61,8 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
     switch (currentScreen) {
       case "timeTracker":
         return "Time Tracker";
+      case "autoTracker":
+        return "Auto Tracker";
       case "calendar":
         return "Calendar";
       case "expenses":

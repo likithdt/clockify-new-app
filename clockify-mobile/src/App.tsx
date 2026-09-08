@@ -12,6 +12,7 @@ import { ClientsScreen } from "./screens/ClientsScreen";
 import { TagsScreen } from "./screens/TagsScreen";
 import { TeamScreen } from "./screens/TeamScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
+import { AutoTrackerScreen } from "./screens/AutoTrackerScreen";
 
 // Screens & Modals
 import { NewTimeEntryScreen } from "./screens/NewTimeEntryScreen";
@@ -701,6 +702,11 @@ export default function App() {
             onUpdateTask={handleUpdateTask}
             onCreateTask={handleCreateTask}
           />
+        )}
+
+        {/* AUTO TRACKER SCREEN */}
+        {currentScreen === "autoTracker" && (
+          <AutoTrackerScreen onActivityLogged={fetchData} />
         )}
 
         {/* CALENDAR SCREEN */}

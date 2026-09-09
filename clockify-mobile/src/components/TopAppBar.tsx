@@ -13,6 +13,7 @@ import {
 export type ScreenType =
   | "dashboard"
   | "approvals"
+  | "rates"
   | "timeTracker"
   | "calendar"
   | "expenses"
@@ -61,6 +62,8 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
         return "Dashboard";
       case "approvals":
         return "Approvals";
+      case "rates":
+        return "Rates";
       case "timeTracker":
         return "Time Tracker";
       case "calendar":

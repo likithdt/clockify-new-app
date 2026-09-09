@@ -16,6 +16,7 @@ import {
   ChevronUp,
   LayoutDashboard,
   CheckSquare,
+  Scale,
 } from "lucide-react";
 import type { ScreenType } from "./TopAppBar";
 
@@ -208,6 +209,20 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
               <span>Approvals</span>
             </div>
             <span className="w-2 h-2 rounded-full bg-[#f59e0b]" />
+          </button>
+
+          {/* Rates */}
+          <button
+            type="button"
+            onClick={() => handleItemClick("rates")}
+            className={`w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-sm font-medium transition-all ${
+              currentScreen === "rates"
+                ? "bg-[#28343f] text-white font-semibold"
+                : "text-[#c2cbd4] hover:bg-white/5 hover:text-white"
+            }`}
+          >
+            <Scale className="w-5 h-5 text-[#8c9ba5]" />
+            <span>Rates</span>
           </button>
 
           {/* Manage Accordion */}

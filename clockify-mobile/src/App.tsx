@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { RatesPage } from "@/components/rates/RatesPage";
 import { ApprovalsPage } from "@/components/approvals/ApprovalsPage";
 import { DashboardPage } from "@/components/dashboard/DashboardPage";
 import { ActivityPage } from "@/components/activity/ActivityPage";
@@ -8,6 +9,7 @@ import { ExpensesPage } from "@/components/expenses/ExpensesPage";
 import { LoginPage } from "@/screens/auth/LoginPage";
 import { TimeOffPage } from "@/components/timeoff/TimeOffPage";
 import {
+  Scale,
   CheckSquare,
   LayoutDashboard,
   Activity,
@@ -19,6 +21,7 @@ import {
 } from "lucide-react";
 
 export type ActivePage =
+  | "rates"
   | "approvals"
   | "dashboard"
   | "activity"
@@ -29,10 +32,10 @@ export type ActivePage =
   | "timeoff";
 
 export default function App() {
-  // Check URL hash for direct routing (#activity, #kiosks, #timesheet, #expenses, #login, #timeoff)
-  // Default to activity as requested
+  // Check URL hash for direct routing (#rates, #approvals, #dashboard, etc.)
   const getInitialPage = (): ActivePage => {
     const hash = window.location.hash.toLowerCase();
+    if (hash.includes("rate")) return "rates";
     if (hash.includes("approvals") || hash.includes("approval")) return "approvals";
     if (hash.includes("dashboard")) return "dashboard";
     if (hash.includes("activity")) return "activity";
@@ -41,7 +44,7 @@ export default function App() {
     if (hash.includes("expenses")) return "expenses";
     if (hash.includes("login")) return "login";
     if (hash.includes("timeoff")) return "timeoff";
-    return "approvals"; // Default to Approvals as requested
+    return "rates"; // Default to Rates on rates-mobile branch
   };
 
   const [activePage, setActivePage] = useState<ActivePage>(getInitialPage);
@@ -49,7 +52,9 @@ export default function App() {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.toLowerCase();
-      if (hash.includes("approvals") || hash.includes("approval")) {
+      if (hash.includes("rate")) {
+        setActivePage("rates");
+      } else if (hash.includes("approvals") || hash.includes("approval")) {
         setActivePage("approvals");
       } else if (hash.includes("dashboard")) {
         setActivePage("dashboard");
@@ -77,16 +82,47 @@ export default function App() {
     window.location.hash = page;
   };
 
+  const handleNavigation = (scr: string) => {
+    const map: Record<string, ActivePage> = {
+      rates: "rates",
+      approvals: "approvals",
+      dashboard: "dashboard",
+      activity: "activity",
+      kiosks: "kiosks",
+      timesheet: "timesheet",
+      expenses: "expenses",
+      timeoff: "timeoff",
+      login: "login",
+    };
+    if (map[scr]) {
+      switchPage(map[scr]);
+    }
+  };
+
   return (
     <div className="h-screen w-screen overflow-hidden font-sans select-none relative">
       {/* Top Floating Page Switcher */}
       <div className="fixed top-2.5 right-4 z-[9999] pointer-events-auto">
-        <div className="flex items-center gap-1 bg-[#161b22]/95 backdrop-blur-md p-1.5 rounded-full border border-[#30363d] shadow-2xl">
+        <div className="flex items-center gap-1 bg-[#161b22]/95 backdrop-blur-md p-1.5 rounded-full border border-[#30363d] shadow-2xl overflow-x-auto max-w-[95vw]">
+          {/* Rates Page Button */}
+          <button
+            type="button"
+            onClick={() => switchPage("rates")}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer shrink-0 ${
+              activePage === "rates"
+                ? "bg-[#00b0ff] text-white shadow-md shadow-[#00b0ff]/30"
+                : "text-slate-300 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <Scale className="w-3.5 h-3.5" />
+            <span>Rates</span>
+          </button>
+
           {/* Approvals Page Button */}
           <button
             type="button"
             onClick={() => switchPage("approvals")}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer shrink-0 ${
               activePage === "approvals"
                 ? "bg-[#00b0ff] text-white shadow-md shadow-[#00b0ff]/30"
                 : "text-slate-300 hover:text-white hover:bg-white/5"
@@ -197,66 +233,18 @@ export default function App() {
       </div>
 
       {/* Render the selected page separately without coupling */}
-      {activePage === "approvals" ? (
-        <ApprovalsPage
-          onNavigateScreen={(scr) => {
-            if (scr === "dashboard") switchPage("dashboard");
-            else if (scr === "activity") switchPage("activity");
-            else if (scr === "kiosks") switchPage("kiosks");
-            else if (scr === "timesheet") switchPage("timesheet");
-            else if (scr === "expenses") switchPage("expenses");
-            else if (scr === "timeoff") switchPage("timeoff");
-            else if (scr === "login") switchPage("login");
-          }}
-        />
+      {activePage === "rates" ? (
+        <RatesPage onNavigateScreen={handleNavigation} />
+      ) : activePage === "approvals" ? (
+        <ApprovalsPage onNavigateScreen={handleNavigation} />
       ) : activePage === "dashboard" ? (
-        <DashboardPage
-          onNavigateScreen={(scr) => {
-            if (scr === "approvals") switchPage("approvals");
-            else if (scr === "activity") switchPage("activity");
-            else if (scr === "kiosks") switchPage("kiosks");
-            else if (scr === "timesheet") switchPage("timesheet");
-            else if (scr === "expenses") switchPage("expenses");
-            else if (scr === "timeoff") switchPage("timeoff");
-            else if (scr === "login") switchPage("login");
-          }}
-        />
+        <DashboardPage onNavigateScreen={handleNavigation} />
       ) : activePage === "activity" ? (
-        <ActivityPage
-          onNavigateScreen={(scr) => {
-            if (scr === "approvals") switchPage("approvals");
-            else if (scr === "dashboard") switchPage("dashboard");
-            else if (scr === "kiosks") switchPage("kiosks");
-            else if (scr === "timesheet") switchPage("timesheet");
-            else if (scr === "expenses") switchPage("expenses");
-            else if (scr === "timeoff") switchPage("timeoff");
-            else if (scr === "login") switchPage("login");
-          }}
-        />
+        <ActivityPage onNavigateScreen={handleNavigation} />
       ) : activePage === "kiosks" ? (
-        <KiosksPage
-          onNavigateScreen={(scr) => {
-            if (scr === "approvals") switchPage("approvals");
-            else if (scr === "dashboard") switchPage("dashboard");
-            else if (scr === "activity") switchPage("activity");
-            else if (scr === "timesheet") switchPage("timesheet");
-            else if (scr === "expenses") switchPage("expenses");
-            else if (scr === "timeoff") switchPage("timeoff");
-            else if (scr === "login") switchPage("login");
-          }}
-        />
+        <KiosksPage onNavigateScreen={handleNavigation} />
       ) : activePage === "timesheet" ? (
-        <TimesheetPage
-          onNavigateScreen={(scr) => {
-            if (scr === "approvals") switchPage("approvals");
-            else if (scr === "dashboard") switchPage("dashboard");
-            else if (scr === "activity") switchPage("activity");
-            else if (scr === "kiosks") switchPage("kiosks");
-            else if (scr === "expenses") switchPage("expenses");
-            else if (scr === "timeoff") switchPage("timeoff");
-            else if (scr === "login") switchPage("login");
-          }}
-        />
+        <TimesheetPage onNavigateScreen={handleNavigation} />
       ) : activePage === "expenses" ? (
         <ExpensesPage />
       ) : activePage === "login" ? (

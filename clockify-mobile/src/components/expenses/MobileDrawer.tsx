@@ -14,6 +14,7 @@ import {
   Activity,
   LayoutDashboard,
   CheckSquare,
+  Scale,
 } from "lucide-react";
 
 interface MobileDrawerProps {
@@ -226,6 +227,20 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
               <span>Approvals</span>
             </div>
             <span className="w-2 h-2 rounded-full bg-[#f59e0b]" />
+          </button>
+
+          {/* Rates */}
+          <button
+            type="button"
+            onClick={() => handleItemClick("rates")}
+            className={`w-full flex items-center gap-4 px-4 py-3 rounded-full text-[14px] font-medium transition-colors ${
+              activeScreen === "rates"
+                ? "bg-[#e0f2fe] text-[#0369a1] font-semibold"
+                : "text-[#374151] hover:bg-[#f3f4f6]"
+            }`}
+          >
+            <Scale className="w-5 h-5 text-[#4b5563]" />
+            <span>Rates</span>
           </button>
 
           {/* Manage Accordion */}

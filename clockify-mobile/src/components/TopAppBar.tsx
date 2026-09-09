@@ -13,6 +13,7 @@ import {
 export type ScreenType =
   | "dashboard"
   | "approvals"
+  | "invoices"
   | "timeTracker"
   | "calendar"
   | "expenses"
@@ -38,6 +39,12 @@ interface TopAppBarProps {
   onFilterClick?: () => void;
   onExportClick?: () => void;
   onShareClick?: () => void;
+  hasActiveFilters?: boolean;
+  activeFilterCount?: number;
+  showNotificationDot?: boolean;
+  onNotificationClick?: () => void;
+  onQuickAdd?: () => void;
+  quickAddLabel?: string;
 }
 
 export const TopAppBar: React.FC<TopAppBarProps> = ({
@@ -61,6 +68,8 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
         return "Dashboard";
       case "approvals":
         return "Approvals";
+      case "invoices":
+        return "Invoices";
       case "timeTracker":
         return "Time Tracker";
       case "calendar":

@@ -11,7 +11,11 @@ import type {
 } from "../types.ts";
 
 export class ScheduleService {
-  constructor(private repo: IScheduleRepository = scheduleRepository) {}
+  private repo: IScheduleRepository;
+
+  constructor(repo: IScheduleRepository = scheduleRepository) {
+    this.repo = repo;
+  }
 
   async listAssignments(filter?: ScheduleFilter): Promise<ScheduleAssignmentDTO[]> {
     return this.repo.getAll(filter);

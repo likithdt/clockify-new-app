@@ -14,6 +14,7 @@ import {
 export type ScreenType =
   | "timeTracker"
   | "autoTracker"
+  | "activity"
   | "calendar"
   | "schedule"
   | "expenses"
@@ -64,6 +65,8 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
         return "Time Tracker";
       case "autoTracker":
         return "Auto Tracker";
+      case "activity":
+        return "Activity";
       case "calendar":
         return "Calendar";
       case "schedule":
@@ -191,6 +194,19 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
                 title="Filter Time off"
               >
                 <Filter className="w-5 h-5" />
+              </button>
+            )}
+
+            {/* Activity: Export Download button */}
+            {currentScreen === "activity" && (
+              <button
+                type="button"
+                onClick={onExportClick}
+                className="p-2 text-[#00b0ff] hover:text-[#40c4ff] active:scale-95 transition-transform"
+                title="Export Activity"
+                aria-label="Export Activity Data"
+              >
+                <Download className="w-5 h-5" />
               </button>
             )}
 

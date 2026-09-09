@@ -13,6 +13,7 @@ import { TagsScreen } from "./screens/TagsScreen";
 import { TeamScreen } from "./screens/TeamScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import { AutoTrackerScreen } from "./screens/AutoTrackerScreen";
+import { ActivityScreen } from "./screens/ActivityScreen";
 import { ScheduleScreen } from "./screens/ScheduleScreen";
 
 // Screens & Modals
@@ -627,7 +628,13 @@ export default function App() {
         }}
         onSettingsClick={() => setCurrentScreen("settings")}
         onFilterClick={() => alert("Filter applied")}
-        onExportClick={() => alert("Exporting report...")}
+        onExportClick={() => {
+          if (currentScreen === "activity") {
+            window.dispatchEvent(new CustomEvent("clockify:open-activity-export"));
+          } else {
+            alert("Exporting report...");
+          }
+        }}
         onShareClick={() => alert("Sharing report...")}
         onMoreClick={() => {
           if (currentScreen === "calendar") {
@@ -753,6 +760,9 @@ export default function App() {
 
         {/* REPORTS SCREEN */}
         {currentScreen === "reports" && <ReportsScreen projects={projects} />}
+
+        {/* ACTIVITY SCREEN (Monitoring, Screenshots, Locations) */}
+        {currentScreen === "activity" && <ActivityScreen />}
 
         {/* PROJECTS SCREEN */}
         {currentScreen === "projects" && (

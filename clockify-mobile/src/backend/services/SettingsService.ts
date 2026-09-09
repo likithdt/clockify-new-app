@@ -16,7 +16,11 @@ import {
 } from "../repositories/SettingsRepository.ts";
 
 export class SettingsService {
-  constructor(private repo: ISettingsRepository = settingsRepository) {}
+  private repo: ISettingsRepository;
+
+  constructor(repo: ISettingsRepository = settingsRepository) {
+    this.repo = repo;
+  }
 
   async getAllSettings(): Promise<MobileSettingsState> {
     return this.repo.getSettings();

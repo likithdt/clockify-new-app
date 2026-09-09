@@ -13,11 +13,19 @@ import {
 } from "../repositories/ProjectRepository.ts";
 
 export class AutoTrackerService {
+  private repo: IAutoTrackerRepository;
+  private timeEntryRepo: ITimeEntryRepository;
+  private projectRepo: IProjectRepository;
+
   constructor(
-    private repo: IAutoTrackerRepository = autoTrackerRepository,
-    private timeEntryRepo: ITimeEntryRepository = timeEntryRepository,
-    private projectRepo: IProjectRepository = projectRepository
-  ) {}
+    repo: IAutoTrackerRepository = autoTrackerRepository,
+    timeEntryRepo: ITimeEntryRepository = timeEntryRepository,
+    projectRepo: IProjectRepository = projectRepository
+  ) {
+    this.repo = repo;
+    this.timeEntryRepo = timeEntryRepo;
+    this.projectRepo = projectRepo;
+  }
 
   async getActivities(): Promise<DetectedActivity[]> {
     return this.repo.getAll();

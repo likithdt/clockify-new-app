@@ -12,6 +12,7 @@ import {
 
 export type ScreenType =
   | "dashboard"
+  | "approvals"
   | "timeTracker"
   | "calendar"
   | "expenses"
@@ -58,6 +59,8 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
     switch (currentScreen) {
       case "dashboard":
         return "Dashboard";
+      case "approvals":
+        return "Approvals";
       case "timeTracker":
         return "Time Tracker";
       case "calendar":

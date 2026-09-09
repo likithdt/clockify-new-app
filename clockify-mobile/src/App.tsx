@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { ApprovalsPage } from "@/components/approvals/ApprovalsPage";
 import { DashboardPage } from "@/components/dashboard/DashboardPage";
 import { ActivityPage } from "@/components/activity/ActivityPage";
 import { KiosksPage } from "@/components/kiosks/KiosksPage";
@@ -7,6 +8,7 @@ import { ExpensesPage } from "@/components/expenses/ExpensesPage";
 import { LoginPage } from "@/screens/auth/LoginPage";
 import { TimeOffPage } from "@/components/timeoff/TimeOffPage";
 import {
+  CheckSquare,
   LayoutDashboard,
   Activity,
   Monitor,
@@ -16,20 +18,30 @@ import {
   RotateCcw,
 } from "lucide-react";
 
-export type ActivePage = "dashboard" | "activity" | "kiosks" | "timesheet" | "expenses" | "login" | "timeoff";
+export type ActivePage =
+  | "approvals"
+  | "dashboard"
+  | "activity"
+  | "kiosks"
+  | "timesheet"
+  | "expenses"
+  | "login"
+  | "timeoff";
 
 export default function App() {
   // Check URL hash for direct routing (#activity, #kiosks, #timesheet, #expenses, #login, #timeoff)
   // Default to activity as requested
   const getInitialPage = (): ActivePage => {
     const hash = window.location.hash.toLowerCase();
+    if (hash.includes("approvals") || hash.includes("approval")) return "approvals";
+    if (hash.includes("dashboard")) return "dashboard";
     if (hash.includes("activity")) return "activity";
     if (hash.includes("kiosks")) return "kiosks";
     if (hash.includes("timesheet")) return "timesheet";
     if (hash.includes("expenses")) return "expenses";
     if (hash.includes("login")) return "login";
     if (hash.includes("timeoff")) return "timeoff";
-    return "dashboard"; // Default to Dashboard as requested
+    return "approvals"; // Default to Approvals as requested
   };
 
   const [activePage, setActivePage] = useState<ActivePage>(getInitialPage);
@@ -37,7 +49,9 @@ export default function App() {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.toLowerCase();
-      if (hash.includes("dashboard")) {
+      if (hash.includes("approvals") || hash.includes("approval")) {
+        setActivePage("approvals");
+      } else if (hash.includes("dashboard")) {
         setActivePage("dashboard");
       } else if (hash.includes("activity")) {
         setActivePage("activity");
@@ -68,6 +82,20 @@ export default function App() {
       {/* Top Floating Page Switcher */}
       <div className="fixed top-2.5 right-4 z-[9999] pointer-events-auto">
         <div className="flex items-center gap-1 bg-[#161b22]/95 backdrop-blur-md p-1.5 rounded-full border border-[#30363d] shadow-2xl">
+          {/* Approvals Page Button */}
+          <button
+            type="button"
+            onClick={() => switchPage("approvals")}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              activePage === "approvals"
+                ? "bg-[#00b0ff] text-white shadow-md shadow-[#00b0ff]/30"
+                : "text-slate-300 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <CheckSquare className="w-3.5 h-3.5" />
+            <span>Approvals</span>
+          </button>
+
           {/* Dashboard Page Button */}
           <button
             type="button"
@@ -169,10 +197,23 @@ export default function App() {
       </div>
 
       {/* Render the selected page separately without coupling */}
-      {activePage === "dashboard" ? (
+      {activePage === "approvals" ? (
+        <ApprovalsPage
+          onNavigateScreen={(scr) => {
+            if (scr === "dashboard") switchPage("dashboard");
+            else if (scr === "activity") switchPage("activity");
+            else if (scr === "kiosks") switchPage("kiosks");
+            else if (scr === "timesheet") switchPage("timesheet");
+            else if (scr === "expenses") switchPage("expenses");
+            else if (scr === "timeoff") switchPage("timeoff");
+            else if (scr === "login") switchPage("login");
+          }}
+        />
+      ) : activePage === "dashboard" ? (
         <DashboardPage
           onNavigateScreen={(scr) => {
-            if (scr === "activity") switchPage("activity");
+            if (scr === "approvals") switchPage("approvals");
+            else if (scr === "activity") switchPage("activity");
             else if (scr === "kiosks") switchPage("kiosks");
             else if (scr === "timesheet") switchPage("timesheet");
             else if (scr === "expenses") switchPage("expenses");
@@ -183,7 +224,8 @@ export default function App() {
       ) : activePage === "activity" ? (
         <ActivityPage
           onNavigateScreen={(scr) => {
-            if (scr === "dashboard") switchPage("dashboard");
+            if (scr === "approvals") switchPage("approvals");
+            else if (scr === "dashboard") switchPage("dashboard");
             else if (scr === "kiosks") switchPage("kiosks");
             else if (scr === "timesheet") switchPage("timesheet");
             else if (scr === "expenses") switchPage("expenses");
@@ -194,7 +236,8 @@ export default function App() {
       ) : activePage === "kiosks" ? (
         <KiosksPage
           onNavigateScreen={(scr) => {
-            if (scr === "dashboard") switchPage("dashboard");
+            if (scr === "approvals") switchPage("approvals");
+            else if (scr === "dashboard") switchPage("dashboard");
             else if (scr === "activity") switchPage("activity");
             else if (scr === "timesheet") switchPage("timesheet");
             else if (scr === "expenses") switchPage("expenses");
@@ -205,7 +248,8 @@ export default function App() {
       ) : activePage === "timesheet" ? (
         <TimesheetPage
           onNavigateScreen={(scr) => {
-            if (scr === "dashboard") switchPage("dashboard");
+            if (scr === "approvals") switchPage("approvals");
+            else if (scr === "dashboard") switchPage("dashboard");
             else if (scr === "activity") switchPage("activity");
             else if (scr === "kiosks") switchPage("kiosks");
             else if (scr === "expenses") switchPage("expenses");

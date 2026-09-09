@@ -13,6 +13,7 @@ import {
   ChevronUp,
   Activity,
   LayoutDashboard,
+  CheckSquare,
 } from "lucide-react";
 
 interface MobileDrawerProps {
@@ -208,6 +209,23 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
           >
             <BarChart3 className="w-5 h-5 text-[#4b5563]" />
             <span>Reports</span>
+          </button>
+
+          {/* Approvals (matching sidebar with notification dot) */}
+          <button
+            type="button"
+            onClick={() => handleItemClick("approvals")}
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-full text-[14px] font-medium transition-colors ${
+              activeScreen === "approvals"
+                ? "bg-[#e0f2fe] text-[#0369a1] font-semibold"
+                : "text-[#374151] hover:bg-[#f3f4f6]"
+            }`}
+          >
+            <div className="flex items-center gap-4">
+              <CheckSquare className="w-5 h-5 text-[#4b5563]" />
+              <span>Approvals</span>
+            </div>
+            <span className="w-2 h-2 rounded-full bg-[#f59e0b]" />
           </button>
 
           {/* Manage Accordion */}

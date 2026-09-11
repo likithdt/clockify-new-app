@@ -2,6 +2,7 @@ import { TimeTrackerController, type ApiResponse } from "../controllers/TimeTrac
 import { SettingsController } from "../controllers/SettingsController.ts";
 import { AutoTrackerController } from "../controllers/AutoTrackerController.ts";
 import { ScheduleController } from "../controllers/ScheduleController.ts";
+import { ActivityController } from "../controllers/ActivityController.ts";
 
 export interface RequestContext {
   method: string;
@@ -238,6 +239,86 @@ export async function handleApiRoute(req: RequestContext): Promise<ApiResponse> 
   }
   if (normalizedPath === "/api/schedule/summary" && method === "GET") {
     return ScheduleController.getSummary();
+  }
+
+  // Activity Monitoring, Screenshots & GPS Location routes
+  if (normalizedPath === "/api/activity/records" && method === "GET") {
+    return ActivityController.listActivityRecords(query);
+  }
+  if (normalizedPath === "/api/activity/records" && method === "POST") {
+    return ActivityController.logActivityRecord(body);
+  }
+  const activityRecordItemMatch = normalizedPath.match(/^\/api\/activity\/records\/([^/]+)$/);
+  if (activityRecordItemMatch && method === "GET") {
+    return ActivityController.getActivityRecord(activityRecordItemMatch[1]);
+  }
+  if (normalizedPath === "/api/activity/summary" && method === "GET") {
+    return ActivityController.getActivitySummary();
+  }
+  if (normalizedPath === "/api/activity/export" && method === "GET") {
+    return ActivityController.exportActivity(query);
+  }
+
+  // Activity Screenshots routes
+  if (normalizedPath === "/api/activity/screenshots" && method === "GET") {
+    return ActivityController.listScreenshots(query);
+  }
+  if (normalizedPath === "/api/activity/screenshots" && method === "POST") {
+    return ActivityController.captureScreenshot(body);
+  }
+  const screenshotItemMatch = normalizedPath.match(/^\/api\/activity\/screenshots\/([^/]+)$/);
+  if (screenshotItemMatch) {
+    const id = screenshotItemMatch[1];
+    if (method === "GET") {
+      return ActivityController.getScreenshot(id);
+    }
+    if (method === "DELETE") {
+      return ActivityController.deleteScreenshot(id);
+    }
+  }
+
+  // Activity Locations & GPS routes
+  if (normalizedPath === "/api/activity/locations" && method === "GET") {
+    return ActivityController.listMemberLocations();
+  }
+  if (normalizedPath === "/api/activity/locations/check-in" && method === "POST") {
+    return ActivityController.checkInLocation(body);
+  }
+  const locationMemberMatch = normalizedPath.match(/^\/api\/activity\/locations\/([^/]+)$/);
+  if (locationMemberMatch) {
+    const id = locationMemberMatch[1];
+    if (method === "GET") {
+      return ActivityController.getMemberLocation(id);
+    }
+    if (method === "PUT" || method === "PATCH") {
+      return ActivityController.updateMemberLocation(id, body);
+    }
+  }
+
+  // Activity Geofences routes
+  if (normalizedPath === "/api/activity/geofences" && method === "GET") {
+    return ActivityController.listGeofences();
+  }
+  if (normalizedPath === "/api/activity/geofences" && method === "POST") {
+    return ActivityController.createGeofence(body);
+  }
+  const geofenceItemMatch = normalizedPath.match(/^\/api\/activity\/geofences\/([^/]+)$/);
+  if (geofenceItemMatch && method === "DELETE") {
+    return ActivityController.deleteGeofence(geofenceItemMatch[1]);
+  }
+
+  // Activity Settings routes
+  if (normalizedPath === "/api/activity/settings" && method === "GET") {
+    return ActivityController.getSettings();
+  }
+  if (
+    normalizedPath === "/api/activity/settings" &&
+    (method === "PUT" || method === "PATCH" || method === "POST")
+  ) {
+    return ActivityController.updateSettings(body);
+  }
+  if (normalizedPath === "/api/activity/reset" && method === "POST") {
+    return ActivityController.resetSampleData();
   }
 
   // Test seed / clear helpers

@@ -7,6 +7,7 @@ import {
   Receipt,
   RotateCcw,
   BarChart3,
+  Activity,
   Inbox,
   Folder,
   Users,
@@ -210,6 +211,26 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
           >
             <BarChart3 className="w-5 h-5 text-[#8c9ba5]" />
             <span>Reports</span>
+          </button>
+
+          {/* Activity (Monitoring, Screenshots, Locations) */}
+          <button
+            type="button"
+            onClick={() => handleItemClick("activity")}
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-medium transition-all ${
+              currentScreen === "activity"
+                ? "bg-[#28343f] text-white font-semibold"
+                : "text-[#c2cbd4] hover:bg-white/5 hover:text-white"
+            }`}
+          >
+            <div className="flex items-center gap-4">
+              <Activity className="w-5 h-5 text-[#03a9f4]" />
+              <span>Activity</span>
+            </div>
+            <span className="text-[10px] font-bold bg-[#03a9f4]/20 border border-[#03a9f4]/40 text-[#03a9f4] px-1.5 py-0.5 rounded-md flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#03a9f4] animate-pulse" />
+              LIVE
+            </span>
           </button>
 
           {/* Manage Accordion */}

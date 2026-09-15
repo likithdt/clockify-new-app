@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { authApi } from "@/lib/authApi";
-import type { DesktopUser } from "@backend/models/authTypes";
+import type { DesktopUser, DateTimePreferences } from "@backend/models/authTypes";
 
 export type DesktopAuthView = "login" | "signup" | "forgotPassword";
 
@@ -9,12 +9,22 @@ const DESKTOP_LOGGED_OUT_KEY = "clockify_desktop_logged_out";
 
 export const DEFAULT_DESKTOP_USER_SESSION: DesktopUser = {
   id: "usr_desktop_bindhu",
-  name: "Bindhu shree",
-  email: "sbindhu230@gmail.com",
+  name: "Bindhu shree K. R",
+  email: "bindhushreebindhushree28@gmail.com",
   avatarInitials: "BS",
   avatarColor: "#00897b", // Teal matching Profile.png
   workspaceName: "GOPALAN COLLEGE OF ENGINEERING...",
   workspaceRole: "Owner",
+  preferences: {
+    dateFormat: "DD/MM/YYYY",
+    use24HourClock: true,
+    dayStart: "09:00",
+    dayEnd: "17:00",
+    weekStart: "Monday",
+    timeZone: "GMT+05:30 Asia/Calcutta",
+    autoTimeZone: false,
+  },
+  theme: "light",
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 
@@ -28,7 +38,7 @@ const loadDesktopSession = (): DesktopUser | null => {
   } catch (e) {
     console.error("Failed to load desktop session:", e);
   }
-  return DEFAULT_DESKTOP_USER_SESSION;
+  return null;
 };
 
 interface DesktopAuthState {
@@ -43,6 +53,8 @@ interface DesktopAuthState {
   isMicrosoftModalOpen: boolean;
   isForgotPasswordModalOpen: boolean;
   isDeleteModalOpen: boolean;
+  isProfileModalOpen: boolean;
+  profileModalTab: "profile" | "preferences" | "cake" | "apps";
 
   // Actions
   setAuthView: (view: DesktopAuthView) => void;
@@ -56,6 +68,8 @@ interface DesktopAuthState {
   closeForgotPasswordModal: () => void;
   openDeleteModal: () => void;
   closeDeleteModal: () => void;
+  openProfileModal: (tab?: "profile" | "preferences" | "cake" | "apps") => void;
+  closeProfileModal: () => void;
 
   // Auth operations
   login: (email: string, password?: string, stayLoggedIn?: boolean) => Promise<boolean>;
@@ -66,6 +80,9 @@ interface DesktopAuthState {
     name: string,
     initials?: string
   ) => Promise<boolean>;
+  updateProfile: (updates: Partial<DesktopUser>) => Promise<boolean>;
+  updatePreferences: (prefs: Partial<DateTimePreferences>) => Promise<boolean>;
+  changePassword: (newPassword: string, currentPassword?: string) => Promise<boolean>;
   logout: () => Promise<void>;
   deleteAccount: () => Promise<boolean>;
   requestPasswordReset: (email: string) => Promise<boolean>;
@@ -85,6 +102,8 @@ export const useAuthStore = create<DesktopAuthState>((set, get) => ({
   isMicrosoftModalOpen: false,
   isForgotPasswordModalOpen: false,
   isDeleteModalOpen: false,
+  isProfileModalOpen: false,
+  profileModalTab: "profile",
 
   setAuthView: (view) => set({ authView: view, error: null }),
   clearError: () => set({ error: null }),
@@ -102,6 +121,9 @@ export const useAuthStore = create<DesktopAuthState>((set, get) => ({
   openDeleteModal: () => set({ isDeleteModalOpen: true }),
   closeDeleteModal: () => set({ isDeleteModalOpen: false }),
 
+  openProfileModal: (tab = "profile") => set({ isProfileModalOpen: true, profileModalTab: tab }),
+  closeProfileModal: () => set({ isProfileModalOpen: false }),
+
   login: async (email: string, password?: string, stayLoggedIn = true) => {
     set({ isLoading: true, error: null });
     try {
@@ -118,13 +140,14 @@ export const useAuthStore = create<DesktopAuthState>((set, get) => ({
           user: res.user,
           token: res.token,
           isLoading: false,
+          error: null,
           successToast: `Welcome back, ${res.user.name}!`,
         });
         setTimeout(() => get().setSuccessToast(null), 3000);
         return true;
       }
     } catch (err: any) {
-      set({ error: err.message || "Login failed. Please check your credentials.", isLoading: false });
+      set({ error: err.message || "Invalid credentials", isLoading: false });
     }
     return false;
   },
@@ -143,7 +166,8 @@ export const useAuthStore = create<DesktopAuthState>((set, get) => ({
           user: res.user,
           token: res.token,
           isLoading: false,
-          successToast: `Account created for ${res.user.name}!`,
+          error: null,
+          successToast: `Account created! Welcome, ${res.user.name}`,
         });
         setTimeout(() => get().setSuccessToast(null), 3000);
         return true;
@@ -186,6 +210,72 @@ export const useAuthStore = create<DesktopAuthState>((set, get) => ({
     return false;
   },
 
+  updateProfile: async (updates: Partial<DesktopUser>) => {
+    const { user } = get();
+    if (!user) return false;
+    set({ isLoading: true, error: null });
+    try {
+      const updated = await authApi.updateProfile(user.id, updates);
+      try {
+        localStorage.setItem(DESKTOP_STORAGE_KEY, JSON.stringify(updated));
+      } catch (e) {}
+      set({
+        user: updated,
+        isLoading: false,
+        successToast: "Profile updated successfully.",
+      });
+      setTimeout(() => get().setSuccessToast(null), 2500);
+      return true;
+    } catch (err: any) {
+      set({ error: err.message || "Failed to update profile", isLoading: false });
+      return false;
+    }
+  },
+
+  updatePreferences: async (prefs: Partial<DateTimePreferences>) => {
+    const { user } = get();
+    if (!user) return false;
+    set({ isLoading: true, error: null });
+    try {
+      const updatedPrefs = await authApi.updatePreferences(user.id, prefs);
+      const updatedUser: DesktopUser = {
+        ...user,
+        preferences: updatedPrefs,
+      };
+      try {
+        localStorage.setItem(DESKTOP_STORAGE_KEY, JSON.stringify(updatedUser));
+      } catch (e) {}
+      set({
+        user: updatedUser,
+        isLoading: false,
+        successToast: "Preferences saved successfully.",
+      });
+      setTimeout(() => get().setSuccessToast(null), 2500);
+      return true;
+    } catch (err: any) {
+      set({ error: err.message || "Failed to save preferences", isLoading: false });
+      return false;
+    }
+  },
+
+  changePassword: async (newPassword: string, currentPassword?: string) => {
+    const { user } = get();
+    if (!user) return false;
+    set({ isLoading: true, error: null });
+    try {
+      const res = await authApi.changePassword(user.id, { newPassword, currentPassword });
+      set({
+        isLoading: false,
+        successToast: res.message || "Password updated successfully.",
+      });
+      setTimeout(() => get().setSuccessToast(null), 2500);
+      return true;
+    } catch (err: any) {
+      set({ error: err.message || "Failed to update password", isLoading: false });
+      return false;
+    }
+  },
+
   logout: async () => {
     const { token } = get();
     try {
@@ -202,6 +292,7 @@ export const useAuthStore = create<DesktopAuthState>((set, get) => ({
       user: null,
       token: null,
       authView: "login",
+      isProfileModalOpen: false,
       error: null,
       successToast: "Logged out successfully",
     });
@@ -229,6 +320,7 @@ export const useAuthStore = create<DesktopAuthState>((set, get) => ({
       user: null,
       token: null,
       authView: "login",
+      isProfileModalOpen: false,
       isDeleteModalOpen: false,
       isLoading: false,
       error: null,

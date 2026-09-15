@@ -67,6 +67,28 @@ export const authApi = {
     return authService.updateProfile(userId, updates);
   },
 
+  updatePreferences: async (userId: string, prefs: any) => {
+    if (isTauri) {
+      try {
+        return await invoke<any>("auth_update_preferences", { userId, prefs });
+      } catch (e) {
+        console.warn("Tauri invoke auth_update_preferences failed, fallback to service:", e);
+      }
+    }
+    return authService.updatePreferences(userId, prefs);
+  },
+
+  changePassword: async (userId: string, payload: any) => {
+    if (isTauri) {
+      try {
+        return await invoke<any>("auth_change_password", { userId, payload });
+      } catch (e) {
+        console.warn("Tauri invoke auth_change_password failed, fallback to service:", e);
+      }
+    }
+    return authService.changePassword(userId, payload);
+  },
+
   logout: async (token?: string): Promise<boolean> => {
     if (isTauri) {
       try {

@@ -5,16 +5,28 @@ import type {
   DesktopOAuthPayload,
   DesktopAuthResponse,
   PasswordResetResponse,
+  DateTimePreferences,
+  ChangePasswordPayload,
 } from "../models/authTypes";
 
 export const DEFAULT_DESKTOP_USER: DesktopUser = {
   id: "usr_desktop_bindhu",
-  name: "Bindhu shree",
-  email: "sbindhu230@gmail.com",
+  name: "Bindhu shree K. R",
+  email: "bindhushreebindhushree28@gmail.com",
   avatarInitials: "BS",
   avatarColor: "#00897b", // Teal matching Profile.png
   workspaceName: "GOPALAN COLLEGE OF ENGINEERING...",
   workspaceRole: "Owner",
+  preferences: {
+    dateFormat: "DD/MM/YYYY",
+    use24HourClock: true,
+    dayStart: "09:00",
+    dayEnd: "17:00",
+    weekStart: "Monday",
+    timeZone: "GMT+05:30 Asia/Calcutta",
+    autoTimeZone: false,
+  },
+  theme: "light",
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 
@@ -41,6 +53,16 @@ export class AuthService {
         avatarColor: "#00897b",
         workspaceName: "My Workspace",
         workspaceRole: "Owner",
+        preferences: {
+          dateFormat: "DD/MM/YYYY",
+          use24HourClock: true,
+          dayStart: "09:00",
+          dayEnd: "17:00",
+          weekStart: "Monday",
+          timeZone: "GMT+05:30 Asia/Calcutta",
+          autoTimeZone: false,
+        },
+        theme: "light",
         createdAt: new Date().toISOString(),
         lastLoginAt: new Date().toISOString(),
       };
@@ -85,6 +107,16 @@ export class AuthService {
       avatarColor: "#00897b",
       workspaceName: payload.workspaceName || `${name}'s Workspace`,
       workspaceRole: "Owner",
+      preferences: {
+        dateFormat: "DD/MM/YYYY",
+        use24HourClock: true,
+        dayStart: "09:00",
+        dayEnd: "17:00",
+        weekStart: "Monday",
+        timeZone: "GMT+05:30 Asia/Calcutta",
+        autoTimeZone: false,
+      },
+      theme: "light",
       createdAt: new Date().toISOString(),
       lastLoginAt: new Date().toISOString(),
     };
@@ -118,8 +150,18 @@ export class AuthService {
         email,
         avatarInitials: initials,
         avatarColor: "#00897b",
-        workspaceName: `${name.split(" ")[0]}'s Workspace`,
+        workspaceName: "My Workspace",
         workspaceRole: "Owner",
+        preferences: {
+          dateFormat: "DD/MM/YYYY",
+          use24HourClock: true,
+          dayStart: "09:00",
+          dayEnd: "17:00",
+          weekStart: "Monday",
+          timeZone: "GMT+05:30 Asia/Calcutta",
+          autoTimeZone: false,
+        },
+        theme: "light",
         createdAt: new Date().toISOString(),
         lastLoginAt: new Date().toISOString(),
       };
@@ -158,13 +200,43 @@ export class AuthService {
 
   async updateProfile(userId: string, updates: Partial<DesktopUser>): Promise<DesktopUser> {
     const index = this.users.findIndex((u) => u.id === userId);
-    if (index === -1) throw new Error(`User with ID ${userId} not found`);
+    if (index === -1) {
+      // If default user or not found in list, modify first user or insert
+      if (this.users.length > 0) {
+        this.users[0] = { ...this.users[0], ...updates };
+        return { ...this.users[0] };
+      }
+      throw new Error(`User with ID ${userId} not found`);
+    }
 
     this.users[index] = {
       ...this.users[index],
       ...updates,
     };
     return { ...this.users[index] };
+  }
+
+  async updatePreferences(
+    userId: string,
+    prefs: Partial<DateTimePreferences>
+  ): Promise<DateTimePreferences> {
+    const user = await this.getCurrentUser(userId);
+    const updatedPreferences: DateTimePreferences = {
+      ...(user.preferences || DEFAULT_DESKTOP_USER.preferences!),
+      ...prefs,
+    };
+    await this.updateProfile(user.id, { preferences: updatedPreferences });
+    return updatedPreferences;
+  }
+
+  async changePassword(
+    _userId: string,
+    payload: ChangePasswordPayload
+  ): Promise<{ success: boolean; message: string }> {
+    if (!payload.newPassword || payload.newPassword.length < 6) {
+      throw new Error("New password must be at least 6 characters long.");
+    }
+    return { success: true, message: "Password updated successfully." };
   }
 
   async logout(token?: string): Promise<boolean> {

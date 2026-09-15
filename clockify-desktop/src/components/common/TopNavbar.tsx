@@ -1,4 +1,7 @@
+import { useState } from "react";
 import { Grid, HelpCircle, Bell, Puzzle, ChevronDown, MoreHorizontal, Info } from "lucide-react";
+import { ProfileDropdown } from "./ProfileDropdown";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 interface TopNavbarProps {
     workspaceName?: string;
@@ -9,6 +12,9 @@ export function TopNavbar({
     workspaceName = "GOPALAN COLLEGE OF ENGINEERING...",
     userInitials = "LD",
 }: TopNavbarProps) {
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const { user } = useAuthStore();
+    const displayInitials = user?.avatarInitials || userInitials;
     return (
         <header className="flex flex-col flex-shrink-0 z-30 select-none">
             {/* Blue Pro Trial Banner (#1A73E8) matching reference screenshot */}
@@ -84,10 +90,24 @@ export function TopNavbar({
                         <HelpCircle className="w-5 h-5" />
                     </button>
 
-                    {/* User Profile circle avatar (Bindhu Shree - BS) */}
-                    <button className="w-8 h-8 rounded-full bg-[#00897b] text-white font-bold text-xs flex items-center justify-center ring-2 ring-white shadow-sm hover:opacity-90 transition">
-                        {userInitials}
-                    </button>
+                    {/* User Profile circle avatar & Dropdown */}
+                    <div className="relative">
+                        <button
+                            type="button"
+                            onClick={() => setIsProfileOpen((prev) => !prev)}
+                            className="w-8 h-8 rounded-full bg-[#00897b] text-white font-bold text-xs flex items-center justify-center ring-2 ring-white shadow-sm hover:opacity-90 hover:ring-2 hover:ring-[#03a9f4] transition cursor-pointer"
+                            title="Profile & account settings (Log out / preferences)"
+                            aria-label="Account profile"
+                            aria-expanded={isProfileOpen}
+                        >
+                            {displayInitials}
+                        </button>
+
+                        <ProfileDropdown
+                            isOpen={isProfileOpen}
+                            onClose={() => setIsProfileOpen(false)}
+                        />
+                    </div>
                 </div>
             </div>
         </header>

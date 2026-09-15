@@ -17,17 +17,31 @@ import { TimesheetPage } from "@/components/timesheet/TimesheetPage";
 import { CalendarPage } from "@/components/calendar/CalendarPage";
 import { TimeOffPage } from "@/components/timeoff/TimeOffPage";
 
+import { LoginPage } from "@/components/auth/LoginPage";
+import { SignUpPage } from "@/components/auth/SignUpPage";
+import { DeleteAccountModal } from "@/components/auth/DeleteAccountModal";
+import { ProfileModal } from "@/components/profile/ProfileModal";
+import { useAuthStore } from "@/stores/useAuthStore";
+
 export default function App() {
+    const { isAuthenticated, authView, user } = useAuthStore();
     // Default to "timesheet" matching the Timesheet feature request
     const [activeRoute, setActiveRoute] = useState<PageRoute>("timesheet");
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+    if (!isAuthenticated) {
+        if (authView === "signup") {
+            return <SignUpPage />;
+        }
+        return <LoginPage />;
+    }
 
     return (
         <div className="flex flex-col h-screen w-screen bg-[#f5f6f8] overflow-hidden select-none font-sans text-[#1e293b]">
             {/* Top Navigation Bar with Trial Banner matching Clockify */}
             <TopNavbar
-                workspaceName="GOPALAN COLLEGE OF ENGINEERING..."
-                userInitials="LD"
+                workspaceName={user?.workspaceName || "GOPALAN COLLEGE OF ENGINEERING..."}
+                userInitials={user?.avatarInitials || "LD"}
             />
 
             {/* Body Area: Sidebar + Main Content */}
@@ -108,6 +122,12 @@ export default function App() {
 
             {/* Global Create Invoice Modal accessible from Reports, Invoices, etc. */}
             <CreateInvoiceModal onNavigateToInvoices={() => setActiveRoute("invoices")} />
+
+            {/* Global Delete Account Modal */}
+            <DeleteAccountModal />
+
+            {/* Global Profile & Preferences Modal */}
+            <ProfileModal />
         </div>
     );
 }

@@ -1,5 +1,5 @@
-import React, { useRef, useEffect, useState } from "react";
-import { User, Settings, Download, LogOut, Trash2, Check } from "lucide-react";
+import React, { useRef, useEffect } from "react";
+import { User, Settings, Download, LogOut, Trash2 } from "lucide-react";
 import { useAuthStore } from "@/stores/useAuthStore";
 
 interface ProfileDropdownProps {
@@ -11,11 +11,9 @@ interface ProfileDropdownProps {
 export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
   isOpen,
   onClose,
-  onOpenPreferences,
 }) => {
-  const { user, logout, openDeleteModal } = useAuthStore();
+  const { user, logout, openDeleteModal, openProfileModal } = useAuthStore();
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const [toast, setToast] = useState<string | null>(null);
 
   // Close when clicked outside
   useEffect(() => {
@@ -34,8 +32,8 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
   if (!isOpen) return null;
 
-  const userName = user?.name || "Bindhu shree";
-  const userEmail = user?.email || "sbindhu230@gmail.com";
+  const userName = user?.name || "Bindhu shree K. R";
+  const userEmail = user?.email || "bindhushreebindhushree28@gmail.com";
   const userInitials = user?.avatarInitials || "BS";
 
   const handleLogout = async () => {
@@ -48,7 +46,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
       {/* Profile Flyout Dropdown matching clockify-ref-images-desktop/Profile.png */}
       <div
         ref={dropdownRef}
-        className="absolute right-4 top-[56px] w-[260px] bg-white rounded-2xl border border-[#e2e8f0] shadow-2xl z-50 overflow-hidden text-[#1e293b] select-none animate-fadeIn"
+        className="absolute right-0 top-10 w-[270px] bg-white rounded-2xl border border-[#e2e8f0] shadow-2xl z-50 overflow-hidden text-[#1e293b] select-none animate-fadeIn"
       >
         {/* User Card */}
         <div className="p-5 flex flex-col items-center text-center">
@@ -64,8 +62,8 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
           <button
             type="button"
             onClick={() => {
-              setToast("Redirecting to CAKE.com Productivity Suite...");
-              setTimeout(() => setToast(null), 2500);
+              openProfileModal("cake");
+              onClose();
             }}
             className="mt-3.5 w-full py-2 px-3 rounded-xl border border-[#cbd5e1] hover:bg-[#f8fafc] text-xs font-semibold text-[#1e293b] transition cursor-pointer shadow-2xs"
           >
@@ -82,8 +80,8 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
           <button
             type="button"
             onClick={() => {
-              setToast(`Profile preferences for ${userName}`);
-              setTimeout(() => setToast(null), 2000);
+              openProfileModal("profile");
+              onClose();
             }}
             className="w-full px-3.5 py-2 rounded-lg text-left flex items-center gap-3 text-[#334155] hover:bg-[#f1f5f9] transition cursor-pointer"
           >
@@ -95,7 +93,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
           <button
             type="button"
             onClick={() => {
-              onOpenPreferences?.();
+              openProfileModal("preferences");
               onClose();
             }}
             className="w-full px-3.5 py-2 rounded-lg text-left flex items-center gap-3 text-[#334155] hover:bg-[#f1f5f9] transition cursor-pointer"
@@ -108,7 +106,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
           <button
             type="button"
             onClick={() => {
-              window.open("https://clockify.me/apps", "_blank");
+              openProfileModal("apps");
               onClose();
             }}
             className="w-full px-3.5 py-2 rounded-lg text-left flex items-center gap-3 text-[#334155] hover:bg-[#f1f5f9] transition cursor-pointer"
@@ -147,14 +145,6 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
           </button>
         </div>
       </div>
-
-      {/* Quick toast message */}
-      {toast && (
-        <div className="fixed bottom-6 right-6 z-[1000] bg-[#1e293b] text-white px-4 py-2.5 rounded-xl shadow-xl text-xs font-medium flex items-center gap-2 animate-fadeIn border border-slate-700">
-          <Check className="w-4 h-4 text-[#03a9f4]" />
-          <span>{toast}</span>
-        </div>
-      )}
     </>
   );
 };

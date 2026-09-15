@@ -60,6 +60,24 @@ export class AuthController {
     }
   }
 
+  static async updatePreferences(userId: string, prefs: any) {
+    try {
+      const updated = await authService.updatePreferences(userId, prefs);
+      return { success: true, data: updated };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  static async changePassword(userId: string, payload: any) {
+    try {
+      const res = await authService.changePassword(userId, payload);
+      return { success: true, data: res };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  }
+
   static async logout(token?: string) {
     try {
       const success = await authService.logout(token);

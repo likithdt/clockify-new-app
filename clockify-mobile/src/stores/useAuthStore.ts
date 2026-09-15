@@ -16,6 +16,7 @@ export interface UserSession {
 }
 
 const STORAGE_KEY = "clockify_mobile_auth_session";
+const LOGGED_OUT_KEY = "clockify_mobile_logged_out";
 
 export const DEFAULT_MOBILE_USER: UserSession = {
   id: "usr_bindhu",
@@ -37,12 +38,18 @@ export const DEFAULT_MOBILE_USER: UserSession = {
 // Helper to load session from localStorage
 const loadSavedSession = (): UserSession | null => {
   try {
+    const isLoggedOut = localStorage.getItem(LOGGED_OUT_KEY);
+    if (isLoggedOut === "true") {
+      return null;
+    }
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_MOBILE_USER));
+    return DEFAULT_MOBILE_USER;
   } catch (e) {
     console.error("Failed to load session:", e);
   }
-  return DEFAULT_MOBILE_USER;
+  return null;
 };
 
 interface AuthState {
@@ -157,6 +164,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       };
 
       try {
+        localStorage.removeItem(LOGGED_OUT_KEY);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
       } catch (e) {
         console.error("Failed to save session:", e);
@@ -174,15 +182,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   loginWithProfile: (user: UserSession) => {
+    const fullSession: UserSession = {
+      id: user.id || "usr_bindhu",
+      name: user.name || "Bindhu shree K. R",
+      email: user.email || "bindhushreebindhushree28@gmail.com",
+      avatarInitials: user.avatarInitials || "BS",
+      avatarColor: user.avatarColor || "#00b0ff",
+      workspace: user.workspace || "GCEM Workspace",
+      workspaceRole: user.workspaceRole || "Owner",
+      dateTimeSettings: user.dateTimeSettings || DEFAULT_MOBILE_USER.dateTimeSettings,
+    };
+
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+      localStorage.removeItem(LOGGED_OUT_KEY);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(fullSession));
     } catch (e) {
       console.error("Failed to save session:", e);
     }
 
     set({
       isAuthenticated: true,
-      user,
+      user: fullSession,
       isGoogleModalOpen: false,
       isMicrosoftModalOpen: false,
     });
@@ -240,6 +260,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   deleteAccount: async () => {
     const { user } = get();
     try {
+      localStorage.setItem(LOGGED_OUT_KEY, "true");
       localStorage.removeItem(STORAGE_KEY);
       if (user?.id) {
         await fetch("/api/auth/account", {
@@ -263,6 +284,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: () => {
     try {
+      localStorage.setItem(LOGGED_OUT_KEY, "true");
       localStorage.removeItem(STORAGE_KEY);
       fetch("/api/auth/logout", {
         method: "POST",

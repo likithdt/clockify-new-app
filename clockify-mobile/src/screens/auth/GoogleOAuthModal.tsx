@@ -18,16 +18,16 @@ interface SavedAccount {
 
 const DEFAULT_ACCOUNTS: SavedAccount[] = [
   {
-    name: "Shivashankar B S",
-    email: "shivubs1508@gmail.com",
-    avatarColor: "bg-[#1a73e8]",
-    initials: "SB",
+    name: "Bindhu shree K. R",
+    email: "bindhushreebindhushree28@gmail.com",
+    avatarColor: "bg-[#00b0ff]",
+    initials: "BS",
   },
   {
-    name: "Shiva Shankar",
-    email: "shivashankar.workspace@gmail.com",
-    avatarColor: "bg-[#0f9d58]",
-    initials: "SS",
+    name: "Bindhu Shree (Work)",
+    email: "bindhushree.workspace@gmail.com",
+    avatarColor: "bg-[#1a73e8]",
+    initials: "BS",
   },
 ];
 
@@ -53,7 +53,7 @@ export const GoogleOAuthModal: React.FC<GoogleOAuthModalProps> = ({
         name: account.name,
         email: account.email,
         avatarInitials: account.initials,
-        workspace: "Shiva's Workspace",
+        workspace: "GCEM Workspace",
       });
       setSigningInAs(null);
       setSelectedEmail(null);

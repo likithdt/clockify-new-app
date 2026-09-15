@@ -17,8 +17,10 @@ import {
   MessageSquare,
   ChevronDown,
   ChevronUp,
+  LogOut,
 } from "lucide-react";
 import type { ScreenType } from "./TopAppBar";
+import { useAuthStore } from "../stores/useAuthStore";
 
 interface NavigationDrawerProps {
   isOpen: boolean;
@@ -43,6 +45,7 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
   workspaceName = "GCEM Workspace",
   onOpenProfile,
 }) => {
+  const { logout } = useAuthStore();
   // Manage submenu is expanded by default (as seen in Manage.jpeg)
   const [isManageExpanded, setIsManageExpanded] = useState(true);
 
@@ -361,6 +364,19 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
           >
             <MessageSquare className="w-5 h-5 text-[#8c9ba5]" />
             <span>Help & Feedback</span>
+          </button>
+
+          {/* Log out */}
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              logout();
+            }}
+            className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-sm font-medium text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer"
+          >
+            <LogOut className="w-5 h-5 text-rose-400" />
+            <span>Log out</span>
           </button>
         </div>
 

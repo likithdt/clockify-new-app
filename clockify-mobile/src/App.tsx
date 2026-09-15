@@ -17,6 +17,7 @@ import { ActivityScreen } from "./screens/ActivityScreen";
 import { ScheduleScreen } from "./screens/ScheduleScreen";
 
 // Screens & Modals
+import { LoginPage } from "./screens/auth/LoginPage";
 import { ProfileScreen } from "./screens/ProfileScreen";
 import { useAuthStore } from "./stores/useAuthStore";
 import { NewTimeEntryScreen } from "./screens/NewTimeEntryScreen";
@@ -76,7 +77,7 @@ export default function App() {
   const [showTimeOffModal, setShowTimeOffModal] = useState(false);
 
   // User Profile
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const userName = user?.name || "Bindhu shree K. R";
   const userEmail = user?.email || "bindhushreebindhushree28@gmail.com";
   const userInitials = user?.avatarInitials || "BS";
@@ -153,8 +154,10 @@ export default function App() {
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (isAuthenticated) {
+      fetchData();
+    }
+  }, [isAuthenticated]);
 
   // Timer actions
   const handleStartTimer = async (data: {
@@ -615,6 +618,10 @@ export default function App() {
     setSearchQuery("");
     setCurrentScreen("timeTracker");
   };
+
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
 
   return (
     <AndroidFrame onBackPress={handleAndroidBack} onHomePress={handleAndroidHome}>

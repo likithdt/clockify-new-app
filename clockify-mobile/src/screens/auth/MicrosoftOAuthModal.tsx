@@ -17,9 +17,9 @@ interface SavedAccount {
 
 const DEFAULT_ACCOUNTS: SavedAccount[] = [
   {
-    name: "Shivashankar B S",
-    email: "shivubs1508@outlook.com",
-    initials: "SB",
+    name: "Bindhu shree K. R",
+    email: "bindhushreebindhushree28@outlook.com",
+    initials: "BS",
   },
 ];
 

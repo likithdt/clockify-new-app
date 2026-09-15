@@ -86,7 +86,7 @@ export class UserRepository implements IUserRepository {
     const initials = userData.avatarInitials ||
       userData.name
         .split(" ")
-        .map((p) => p[0])
+        .map((p: string) => p[0])
         .join("")
         .toUpperCase()
         .slice(0, 2) ||

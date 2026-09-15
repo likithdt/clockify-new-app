@@ -27,6 +27,7 @@ interface NavigationDrawerProps {
   onNavigate: (screen: ScreenType) => void;
   userName?: string;
   userEmail?: string;
+  userInitials?: string;
   workspaceName?: string;
   onOpenProfile?: () => void;
 }
@@ -36,8 +37,10 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
   onClose,
   currentScreen,
   onNavigate,
-  userName = "vishalkomi954",
-  workspaceName = "gcem",
+  userName = "Bindhu shree K. R",
+  userEmail = "bindhushreebindhushree28@gmail.com",
+  userInitials = "BS",
+  workspaceName = "GCEM Workspace",
   onOpenProfile,
 }) => {
   // Manage submenu is expanded by default (as seen in Manage.jpeg)
@@ -88,12 +91,12 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
             className="mt-4 flex items-center gap-3 cursor-pointer group p-1 -ml-1 rounded-xl hover:bg-white/5 transition-colors"
           >
             <div className="w-10 h-10 rounded-xl bg-[#00b0ff] flex items-center justify-center font-bold text-base text-white shadow-sm">
-              VI
+              {userInitials}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-white truncate">{userName}</p>
-              <p className="text-xs text-[#8c9ba5] group-hover:text-[#00b0ff] transition-colors">
-                View profile
+              <p className="text-xs text-[#8c9ba5] group-hover:text-[#00b0ff] transition-colors truncate">
+                {userEmail}
               </p>
             </div>
           </div>
@@ -315,6 +318,23 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
 
           {/* Bottom Divider */}
           <div className="border-b border-[#272e38] my-2 pt-1" />
+
+          {/* My Profile */}
+          <button
+            type="button"
+            onClick={() => {
+              if (onOpenProfile) onOpenProfile();
+              else handleItemClick("profile");
+            }}
+            className={`w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-sm font-medium transition-all ${
+              currentScreen === "profile"
+                ? "bg-[#28343f] text-white font-semibold"
+                : "text-[#c2cbd4] hover:bg-white/5 hover:text-white"
+            }`}
+          >
+            <User className="w-5 h-5 text-[#8c9ba5]" />
+            <span>My Profile</span>
+          </button>
 
           {/* Settings */}
           <button

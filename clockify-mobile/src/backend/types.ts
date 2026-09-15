@@ -473,3 +473,46 @@ export interface ActivitySummaryDTO {
   total_screenshots_captured: number;
   geofence_compliant_percent: number;
 }
+
+// ─── Authentication, Profile & Preferences Types ─────────────────────────────
+
+export interface DateTimeSettings {
+  dateFormat: "DD/MM/YYYY" | "MM/DD/YYYY" | "YYYY-MM-DD" | "DD.MM.YYYY";
+  use24HourClock: boolean;
+  dayStart: string;
+  setTimeZoneAutomatically: boolean;
+  timeZone: string;
+}
+
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  avatarInitials: string;
+  avatarColor: string;
+  avatarUrl?: string;
+  workspace: string;
+  workspaceRole: string;
+  dateTimeSettings: DateTimeSettings;
+  createdAt: string;
+  lastLoginAt?: string;
+}
+
+export interface SignUpPayload {
+  name: string;
+  email: string;
+  password?: string;
+  workspaceName?: string;
+}
+
+export interface OAuthLoginPayload {
+  provider: "google" | "microsoft" | "apple";
+  email: string;
+  name: string;
+  avatarInitials?: string;
+}
+
+export interface AuthSessionResponse {
+  token: string;
+  user: AuthUser;
+}

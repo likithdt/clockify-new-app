@@ -3,6 +3,7 @@ import { SettingsController } from "../controllers/SettingsController.ts";
 import { AutoTrackerController } from "../controllers/AutoTrackerController.ts";
 import { ScheduleController } from "../controllers/ScheduleController.ts";
 import { ActivityController } from "../controllers/ActivityController.ts";
+import { AuthController } from "../controllers/AuthController.ts";
 
 export interface RequestContext {
   method: string;
@@ -327,6 +328,38 @@ export async function handleApiRoute(req: RequestContext): Promise<ApiResponse> 
   }
   if (normalizedPath === "/api/clear-data" && method === "POST") {
     return TimeTrackerController.clearData();
+  }
+
+  // Authentication & User Profile routes
+  if (normalizedPath === "/api/auth/otp/send" && method === "POST") {
+    return AuthController.sendOtp(body);
+  }
+  if (normalizedPath === "/api/auth/otp/verify" && method === "POST") {
+    return AuthController.verifyOtp(body);
+  }
+  if (normalizedPath === "/api/auth/login" && method === "POST") {
+    return AuthController.login(body);
+  }
+  if (normalizedPath === "/api/auth/signup" && method === "POST") {
+    return AuthController.signup(body);
+  }
+  if (normalizedPath === "/api/auth/oauth" && method === "POST") {
+    return AuthController.oauthLogin(body);
+  }
+  if (normalizedPath === "/api/auth/me" && method === "GET") {
+    return AuthController.getCurrentUser(query.identifier);
+  }
+  if (normalizedPath === "/api/auth/profile" && (method === "PUT" || method === "PATCH" || method === "POST")) {
+    return AuthController.updateProfile(body);
+  }
+  if (normalizedPath === "/api/auth/datetime-settings" && (method === "PUT" || method === "PATCH" || method === "POST")) {
+    return AuthController.updateDateTimeSettings(body);
+  }
+  if (normalizedPath === "/api/auth/logout" && method === "POST") {
+    return AuthController.logout(body);
+  }
+  if (normalizedPath === "/api/auth/account" && (method === "DELETE" || method === "POST")) {
+    return AuthController.deleteAccount(body);
   }
 
   return { status: 404, error: `API route '${method} ${path}' not found` };

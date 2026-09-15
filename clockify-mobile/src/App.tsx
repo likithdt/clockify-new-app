@@ -17,6 +17,8 @@ import { ActivityScreen } from "./screens/ActivityScreen";
 import { ScheduleScreen } from "./screens/ScheduleScreen";
 
 // Screens & Modals
+import { ProfileScreen } from "./screens/ProfileScreen";
+import { useAuthStore } from "./stores/useAuthStore";
 import { NewTimeEntryScreen } from "./screens/NewTimeEntryScreen";
 import type { PomodoroSettings } from "./screens/PomodoroSettingsScreen";
 import { ProjectModal } from "./components/modals/ProjectModal";
@@ -74,9 +76,11 @@ export default function App() {
   const [showTimeOffModal, setShowTimeOffModal] = useState(false);
 
   // User Profile
-  const userName = "vishalkomi954";
-  const userEmail = "vishalkomi954@gmail.com";
-  const workspaceName = "gcem";
+  const { user } = useAuthStore();
+  const userName = user?.name || "Bindhu shree K. R";
+  const userEmail = user?.email || "bindhushreebindhushree28@gmail.com";
+  const userInitials = user?.avatarInitials || "BS";
+  const workspaceName = user?.workspace || "GCEM Workspace";
 
   // Pomodoro Settings State (Persisted)
   const [pomodoroSettings, setPomodoroSettings] = useState<PomodoroSettings>(() => {
@@ -815,43 +819,12 @@ export default function App() {
           />
         )}
 
-        {/* PROFILE SCREEN (when clicked from Drawer profile) */}
+        {/* FULL CLOCKIFY PROFILE & PREFERENCES SCREEN matching Profile.jpeg */}
         {currentScreen === "profile" && (
-          <div className="flex-1 overflow-y-auto bg-[#0f1216] p-5 space-y-5 select-none pb-12">
-            <div className="flex flex-col items-center justify-center pt-4 pb-2">
-              <div className="w-20 h-20 rounded-3xl bg-[#00b0ff] flex items-center justify-center font-bold text-2xl text-white shadow-xl mb-3">
-                VI
-              </div>
-              <h2 className="text-lg font-bold text-white">{userName}</h2>
-              <p className="text-xs text-[#8c9ba5]">{userEmail}</p>
-            </div>
-
-            <div className="bg-[#1a1f26] border border-[#27303c] rounded-2xl p-4 space-y-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-[#8c9ba5]">
-                Account & Workspace
-              </h3>
-              <div className="flex items-center justify-between py-2 border-b border-[#242b36]">
-                <span className="text-xs text-[#8c9ba5]">Workspace</span>
-                <span className="text-sm font-semibold text-white">{workspaceName}</span>
-              </div>
-              <div className="flex items-center justify-between py-2 border-b border-[#242b36]">
-                <span className="text-xs text-[#8c9ba5]">Role</span>
-                <span className="text-sm font-semibold text-white">Workspace Owner</span>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span className="text-xs text-[#8c9ba5]">Email</span>
-                <span className="text-sm font-semibold text-white">{userEmail}</span>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setCurrentScreen("timeTracker")}
-              className="w-full py-3 rounded-2xl bg-[#1d232c] border border-[#27303d] text-white font-medium text-xs hover:bg-[#252e3a]"
-            >
-              Back to Time Tracker
-            </button>
-          </div>
+          <ProfileScreen
+            onOpenDrawer={() => setIsDrawerOpen(true)}
+            onNavigateToLogin={() => setCurrentScreen("timeTracker")}
+          />
         )}
       </div>
 
@@ -867,6 +840,7 @@ export default function App() {
         }}
         userName={userName}
         userEmail={userEmail}
+        userInitials={userInitials}
         workspaceName={workspaceName}
         onOpenProfile={() => setCurrentScreen("profile")}
       />
